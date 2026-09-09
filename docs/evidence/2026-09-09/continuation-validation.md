@@ -37,7 +37,7 @@ Only synthetic demo/test data was used.
 - API local image: `sha256:fa26230422c61fa30f78d337ea79b3591364759e8556c2b7f5358ea5aeb74cd5`
 - Web local image: `sha256:0eb342db5f369fd6f90074a6a7a244cc8c1559fabd06c3da06862c8a3dab2fab`
 - Screenshot manifest: `cf85e342143ede602cac2a001d8e222c024bbdba388f80fd0f8d511fc3f28b9f`
-- OpenAPI contract: `60bc8dd80de4493fe760bb61c62845266377a0b6a6896c64429f9c11c97ae30d`
+- OpenAPI SHA-256: `60bc8dd80de4493fe760bb61c62845266377a0b6a6896c64429f9c11c97ae30d`
 - Validation JSON: `6534fa11f16a8308e43afe050e7edc86c65e915bfad796254f3189a17f68ddbd`
 
 ## Unpassed gates
