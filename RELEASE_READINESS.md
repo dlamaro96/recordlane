@@ -3,7 +3,7 @@
 Target: 0.1.0-alpha.1
 
 The project is a working open alpha but is not production-release-ready. The
-named acceptance suite currently reports 9 passed and 15 explicitly skipped;
+named acceptance suite currently reports 10 passed and 14 explicitly skipped;
 the matrix gives two skipped scenarios narrower `INTEGRATION_TESTED` status and
 keeps every other skipped outcome `BLOCKED`. A skip is not a pass.
 
@@ -23,7 +23,7 @@ keeps every other skipped outcome `BLOCKED`. A skip is not a pass.
 
 - Browser OIDC authorization-code + PKCE sessions/login/logout and SCIM lifecycle.
 - Cross-workspace/field authorization matrix and PostgreSQL RLS defense in depth.
-- Complete UI model/config export/import/approved-activation workflow.
+- Complete UI model/config export/import workflow across workspaces.
 - Durable extraction interruption, delta handoff, ambiguous publication timeout,
   and stale-worker/dependency failure injection.
 - Previous-schema upgrade, disconnected install, production Compose startup,

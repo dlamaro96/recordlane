@@ -4,7 +4,7 @@ rootdir: /Users/daniamaro96/Documents/ChatGPT/MDM
 plugins: hypothesis-6.140.3, anyio-4.15.1, cov-7.0.0
 collected 24 items
 
-tests/acceptance/test_contract_scenarios.py ss...sss.sss.sssss....ss     [100%]
+tests/acceptance/test_contract_scenarios.py ss...sss..ss.sssss....ss     [100%]
 
 =============================== warnings summary ===============================
 backend/.venv/lib/python3.14/site-packages/fastapi/testclient.py:1
@@ -16,4 +16,4 @@ backend/.venv/lib/python3.14/site-packages/starlette/testclient.py:53
     _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-================== 9 passed, 15 skipped, 2 warnings in 3.64s ===================
+================== 10 passed, 14 skipped, 2 warnings in 4.14s ==================

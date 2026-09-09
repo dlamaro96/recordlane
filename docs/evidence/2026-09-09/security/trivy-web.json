@@ -3,18 +3,18 @@
   "Trivy": {
     "Version": "0.74.0"
   },
-  "ReportID": "01a0860c-e39d-7b52-813f-9284d6e082e8",
-  "CreatedAt": "2026-09-09T16:03:06.781744+04:00",
-  "ArtifactID": "sha256:96a4e48f3148dd55763cda6d361638c410fa1df8ffefd0906ae46b2231a42eca",
+  "ReportID": "01a0862e-0a6c-72a7-a8e5-650d00cea084",
+  "CreatedAt": "2026-09-09T16:39:19.404175+04:00",
+  "ArtifactID": "sha256:d49d8d015504474bcd976209fd7ce8e1fa296a32a921b6e448d15d8ca08ac56a",
   "ArtifactName": "recordlane-demo-web:latest",
   "ArtifactType": "container_image",
   "Metadata": {
-    "Size": 69585408,
+    "Size": 69586432,
     "OS": {
       "Family": "alpine",
       "Name": "3.22.1"
     },
-    "ImageID": "sha256:3384bf03e6252fa8eb439114c5a9549ae09e59342468e288e25bc7c2bc051798",
+    "ImageID": "sha256:97da7f2918230e4ec067ba4397c10389103cbe3dc33ddd2ac45b6da1ca3d76df",
     "DiffIDs": [
       "sha256:0b83d017db6efafadf6b3f18d087d2ce1d67d8f0e927dc7254b0ad088074cd3a",
       "sha256:488c372ba3256e07c09fa9b9510c4f24baeb7352b68006ac328bef4d32d299d8",
@@ -26,19 +26,19 @@
       "sha256:52525aad6e4f256604bb6568ccc6c218142e37f993a3caf3c4cbe9947944bdb2",
       "sha256:981e2ed4eada816e7266abe87d4b108d76b086603f4ba4e9c98801a8c3b7265f",
       "sha256:c41a2424b875d48e73274c03666951fbbf079f7b909fdf2ffc7ec453bb7adea5",
-      "sha256:7ca23beffb1893007883bb42734a27b01af700282c94822fb10b7fbe3bcd8c9c",
-      "sha256:a9455b897e3344c311cab44420ab75b34191bcdbd9a83b09a7ab4e7a502f3d02"
+      "sha256:c7e8bb0a79caa5d4328d0e7ce3105566f5999a80adfb4531969a555145f7e615",
+      "sha256:58909bf6359a23308aeafb5b4524d5d40f9fd435dc5288342979eb188d0dffd8"
     ],
     "RepoTags": [
       "recordlane-demo-web:latest"
     ],
     "RepoDigests": [
-      "recordlane-demo-web@sha256:3384bf03e6252fa8eb439114c5a9549ae09e59342468e288e25bc7c2bc051798"
+      "recordlane-demo-web@sha256:97da7f2918230e4ec067ba4397c10389103cbe3dc33ddd2ac45b6da1ca3d76df"
     ],
     "Reference": "recordlane-demo-web:latest",
     "ImageConfig": {
       "architecture": "arm64",
-      "created": "2026-09-09T16:01:57.748630464+04:00",
+      "created": "2026-09-09T16:38:53.662797851+04:00",
       "history": [
         {
           "created": "2025-07-15T11:01:16Z",
@@ -163,29 +163,29 @@
           "comment": "buildkit.dockerfile.v0"
         },
         {
-          "created": "2026-09-09T12:01:57Z",
+          "created": "2026-09-09T12:38:53Z",
           "created_by": "COPY /src/dist /usr/share/nginx/html # buildkit",
           "comment": "buildkit.dockerfile.v0"
         },
         {
-          "created": "2026-09-09T12:01:57Z",
+          "created": "2026-09-09T12:38:53Z",
           "created_by": "RUN /bin/sh -c chown -R nginx:nginx /var/cache/nginx /var/run /usr/share/nginx/html \u0026\u0026     sed -i 's/user  nginx;/user nginx;/; s#pid .*;#pid /tmp/nginx.pid;#' /etc/nginx/nginx.conf # buildkit",
           "comment": "buildkit.dockerfile.v0"
         },
         {
-          "created": "2026-09-09T12:01:57Z",
+          "created": "2026-09-09T12:38:53Z",
           "created_by": "USER nginx",
           "comment": "buildkit.dockerfile.v0",
           "empty_layer": true
         },
         {
-          "created": "2026-09-09T12:01:57Z",
+          "created": "2026-09-09T12:38:53Z",
           "created_by": "EXPOSE map[8080/tcp:{}]",
           "comment": "buildkit.dockerfile.v0",
           "empty_layer": true
         },
         {
-          "created": "2026-09-09T12:01:57Z",
+          "created": "2026-09-09T12:38:53Z",
           "created_by": "HEALTHCHECK \u0026{[\"CMD\" \"wget\" \"-qO-\" \"http://127.0.0.1:8080/\"] \"20s\" \"3s\" \"0s\" \"0s\" '\\x05'}",
           "comment": "buildkit.dockerfile.v0",
           "empty_layer": true
@@ -205,8 +205,8 @@
           "sha256:52525aad6e4f256604bb6568ccc6c218142e37f993a3caf3c4cbe9947944bdb2",
           "sha256:981e2ed4eada816e7266abe87d4b108d76b086603f4ba4e9c98801a8c3b7265f",
           "sha256:c41a2424b875d48e73274c03666951fbbf079f7b909fdf2ffc7ec453bb7adea5",
-          "sha256:7ca23beffb1893007883bb42734a27b01af700282c94822fb10b7fbe3bcd8c9c",
-          "sha256:a9455b897e3344c311cab44420ab75b34191bcdbd9a83b09a7ab4e7a502f3d02"
+          "sha256:c7e8bb0a79caa5d4328d0e7ce3105566f5999a80adfb4531969a555145f7e615",
+          "sha256:58909bf6359a23308aeafb5b4524d5d40f9fd435dc5288342979eb188d0dffd8"
         ]
       },
       "config": {
@@ -305,14 +305,14 @@
         "DiffID": "sha256:c41a2424b875d48e73274c03666951fbbf079f7b909fdf2ffc7ec453bb7adea5"
       },
       {
-        "Size": 248832,
-        "Digest": "sha256:525546fbfc6a5b08254034fd2cfac72491e5fa9cf1464519b7d407f7978d940b",
-        "DiffID": "sha256:7ca23beffb1893007883bb42734a27b01af700282c94822fb10b7fbe3bcd8c9c"
+        "Size": 249344,
+        "Digest": "sha256:57f96867068df4b8b7319df8e26d9ffed2fc7ce20851aac5cd0be2fadf24e6c4",
+        "DiffID": "sha256:c7e8bb0a79caa5d4328d0e7ce3105566f5999a80adfb4531969a555145f7e615"
       },
       {
-        "Size": 254464,
-        "Digest": "sha256:e5d48f7f012007b8c5b025c2b296110786f470b9ce7b0c934aaf0f6fa3d5a111",
-        "DiffID": "sha256:a9455b897e3344c311cab44420ab75b34191bcdbd9a83b09a7ab4e7a502f3d02"
+        "Size": 254976,
+        "Digest": "sha256:081050d90c884f56f1ebee64292ff96884cea128d3a10f1dd7bdf9dcf0c1f776",
+        "DiffID": "sha256:58909bf6359a23308aeafb5b4524d5d40f9fd435dc5288342979eb188d0dffd8"
       }
     ]
   },

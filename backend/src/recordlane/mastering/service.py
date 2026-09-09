@@ -293,6 +293,37 @@ class MasteringService:
             self.db.add(event)
             self.db.flush()
             event.payload = event.payload | {"event_id": event.id, "occurred_at": event.occurred_at.isoformat(), "schema_version": event.schema_version}
+        elif task.kind == "configuration_approval" and decision == "approve":
+            config = self.db.scalar(select(ConfigurationVersion).where(
+                ConfigurationVersion.id == task.payload["config_id"],
+                ConfigurationVersion.workspace_id == self.wid,
+                ConfigurationVersion.status == "draft",
+            ))
+            simulation = self.db.scalar(select(Simulation).where(
+                Simulation.id == task.payload["simulation_id"],
+                Simulation.workspace_id == self.wid,
+                Simulation.config_id == task.payload["config_id"],
+            ))
+            checkpoint = self.db.scalar(select(func.count(SourceRecord.id)).where(SourceRecord.workspace_id == self.wid)) or 0
+            if not config or not simulation or config.checksum != task.payload["checksum"]:
+                raise HTTPException(409, detail={"code": "configuration_changed"})
+            if checkpoint != simulation.data_checkpoint:
+                task.status = "stale"
+                self.db.commit()
+                raise HTTPException(409, detail={"code": "stale_simulation", "current_checkpoint": checkpoint})
+            active = self.db.scalars(select(ConfigurationVersion).where(
+                ConfigurationVersion.workspace_id == self.wid,
+                ConfigurationVersion.status == "active",
+            )).all()
+            for previous in active:
+                previous.status = "retired"
+            config.status = "active"
+            self.audit("configuration.activated", "configuration", config.id, {
+                "version": config.version,
+                "checksum": config.checksum,
+                "simulation_id": simulation.id,
+                "data_checkpoint": checkpoint,
+            })
         elif task.kind == "merge_approval" and decision == "approve":
             self._apply_merge(task, reason)
         elif task.kind == "split_approval" and decision == "approve":
@@ -456,6 +487,56 @@ class MasteringService:
     def simulation_view(self, simulation: Simulation) -> dict:
         current = self.db.scalar(select(func.count(SourceRecord.id)).where(SourceRecord.workspace_id == self.wid)) or 0
         return serialize(simulation) | {"stale": current != simulation.data_checkpoint, "current_checkpoint": current}
+
+    def propose_config(self, config_id: str, simulation_id: str) -> ReviewTask:
+        config = self.db.scalar(select(ConfigurationVersion).where(
+            ConfigurationVersion.id == config_id,
+            ConfigurationVersion.workspace_id == self.wid,
+            ConfigurationVersion.status == "draft",
+        ))
+        simulation = self.db.scalar(select(Simulation).where(
+            Simulation.id == simulation_id,
+            Simulation.workspace_id == self.wid,
+            Simulation.config_id == config_id,
+        ))
+        if not config:
+            raise HTTPException(404, detail={"code": "configuration_draft_not_found"})
+        if not simulation:
+            raise HTTPException(409, detail={"code": "matching_simulation_required"})
+        checkpoint = self.db.scalar(select(func.count(SourceRecord.id)).where(SourceRecord.workspace_id == self.wid)) or 0
+        if checkpoint != simulation.data_checkpoint:
+            raise HTTPException(409, detail={"code": "stale_simulation", "current_checkpoint": checkpoint})
+        existing = self.db.scalar(select(ReviewTask).where(
+            ReviewTask.workspace_id == self.wid,
+            ReviewTask.kind == "configuration_approval",
+            ReviewTask.status == "open",
+        ))
+        if existing:
+            existing.status = "stale"
+            existing.decision_reason = "Superseded by a newer configuration proposal"
+        task = ReviewTask(
+            workspace_id=self.wid,
+            kind="configuration_approval",
+            entity_id=None,
+            proposed_by=self.principal.subject,
+            payload={
+                "config_id": config.id,
+                "config_version": config.version,
+                "checksum": config.checksum,
+                "simulation_id": simulation.id,
+                "data_checkpoint": simulation.data_checkpoint,
+                "impact": simulation.result,
+            },
+            bound_entity_version=None,
+            sensitive=True,
+            priority="high",
+            due_at=now() + timedelta(days=2),
+        )
+        self.db.add(task)
+        self.db.flush()
+        self.audit("configuration.proposed", "review_task", task.id, task.payload)
+        self.db.commit()
+        return task
 
 
 def _walk_values(value: Any):

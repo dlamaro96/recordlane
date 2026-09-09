@@ -51,6 +51,10 @@ class ConfigurationCreate(BaseModel):
     document: dict[str, Any]
 
 
+class ConfigurationProposal(BaseModel):
+    simulation_id: str
+
+
 class MergeRequest(BaseModel):
     entity_ids: list[str] = Field(min_length=2, max_length=20)
     reason: str = Field(min_length=3, max_length=2000)
@@ -59,4 +63,3 @@ class MergeRequest(BaseModel):
 class SplitRequest(BaseModel):
     source_record_ids: list[str] = Field(min_length=1, max_length=100)
     reason: str = Field(min_length=3, max_length=2000)
-

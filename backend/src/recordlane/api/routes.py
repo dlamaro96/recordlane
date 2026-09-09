@@ -18,7 +18,7 @@ from recordlane.models.tables import (
     AuditEntry, ConfigurationVersion, Domain, Entity, MasterVersion, OutboxEvent,
     Relationship, ReviewTask, Simulation, Source, SourceRecord,
 )
-from recordlane.schemas import ConfigurationCreate, DecisionRequest, DomainCreate, IngestionRequest, MergeRequest, RelationshipCreate, SplitRequest
+from recordlane.schemas import ConfigurationCreate, ConfigurationProposal, DecisionRequest, DomainCreate, IngestionRequest, MergeRequest, RelationshipCreate, SplitRequest
 from recordlane.settings import get_settings
 
 
@@ -156,6 +156,12 @@ def create_configuration(payload: ConfigurationCreate, who: Who, db: DB) -> dict
 def simulate(config_id: str, who: Who, db: DB) -> dict:
     svc = service(db, who, "config:simulate")
     return svc.simulation_view(svc.simulate(config_id))
+
+
+@router.post("/configurations/{config_id}/propose", status_code=202)
+def propose_configuration(config_id: str, payload: ConfigurationProposal, who: Who, db: DB) -> dict:
+    task = service(db, who, "config:publish").propose_config(config_id, payload.simulation_id)
+    return serialize(task)
 
 
 @router.get("/simulations")

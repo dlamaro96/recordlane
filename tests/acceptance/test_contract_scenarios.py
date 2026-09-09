@@ -104,7 +104,32 @@ def test_ai_merge_split_relationship_and_consumer_repair():
 
 
 def test_aj_policy_preview_staleness_and_approved_activation():
-    blocked("simulation persists affected counts, but approved activation and stale-preview rejection are not implemented")
+    modeler = {"X-Recordlane-Role": "modeler", "X-Recordlane-User": "config.modeler"}
+    operator = {"X-Recordlane-Role": "integration_operator", "X-Recordlane-User": "ingest.operator"}
+    same_proposer = {"X-Recordlane-Role": "approver", "X-Recordlane-User": "config.modeler"}
+    with TestClient(app) as client:
+        created = client.post("/api/v1/configurations", headers=modeler, json={"document": {"schema_version": "1.0", "matching": {"supplier": {"review_threshold": 0.61}}}})
+        assert created.status_code == 201, created.text
+        config_id = created.json()["id"]
+        simulation = client.post(f"/api/v1/configurations/{config_id}/simulate", headers=modeler)
+        assert simulation.status_code == 201, simulation.text
+        simulation_id = simulation.json()["id"]
+
+        ingested = client.post("/api/v1/sources/erp-postgres/ingest", headers=operator, json={"domain": "supplier", "records": [{"local_id": "policy-race", "version": "1", "values": {"name": "Policy Race Supplier", "country": "US"}}]})
+        assert ingested.status_code == 200, ingested.text
+        stale = client.post(f"/api/v1/configurations/{config_id}/propose", headers=modeler, json={"simulation_id": simulation_id})
+        assert stale.status_code == 409
+        assert stale.json()["detail"]["code"] == "stale_simulation"
+
+        refreshed = client.post(f"/api/v1/configurations/{config_id}/simulate", headers=modeler).json()
+        proposed = client.post(f"/api/v1/configurations/{config_id}/propose", headers=modeler, json={"simulation_id": refreshed["id"]})
+        assert proposed.status_code == 202, proposed.text
+        task_id = proposed.json()["id"]
+        assert client.post(f"/api/v1/review-tasks/{task_id}/decision", headers=same_proposer, json={"decision": "approve", "reason": "self approval attempt"}).status_code == 403
+        approved = client.post(f"/api/v1/review-tasks/{task_id}/decision", headers=APPROVER, json={"decision": "approve", "reason": "independent configuration review"})
+        assert approved.status_code == 200, approved.text
+        statuses = {row["id"]: row["status"] for row in client.get("/api/v1/configurations").json()}
+        assert statuses[config_id] == "active"
 
 
 def test_ak_authorization_across_every_surface():

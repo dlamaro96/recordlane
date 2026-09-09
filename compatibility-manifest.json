@@ -20,8 +20,8 @@
   "documentation_url": "https://dlamaro96.github.io/recordlane-docs/",
   "deployment": {"helm_chart": "0.1.0-alpha.1", "compose_schema": "demo-v1/production-v1"},
   "local_images": {
-    "recordlane-demo-api": "sha256:d2aec182a3793d1d6962851f02d645a106ddff10cef602387073c30de2d7b368",
-    "recordlane-demo-web": "sha256:3384bf03e6252fa8eb439114c5a9549ae09e59342468e288e25bc7c2bc051798"
+    "recordlane-demo-api": "sha256:a1c55051f25ae12aca4ab6e234d458e209a7fb02a1ca113dc6dcdfb46060a149",
+    "recordlane-demo-web": "sha256:97da7f2918230e4ec067ba4397c10389103cbe3dc33ddd2ac45b6da1ca3d76df"
   },
   "published_images": null,
   "notes": ["Local image digests are native arm64 build identities, not registry URLs.", "SDKs require a platform with API v1 and must query /api/v1/capabilities.", "GitHub release publication is intentionally gated while mandatory acceptance scenarios remain blocked."]
