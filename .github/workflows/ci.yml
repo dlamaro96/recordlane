@@ -22,7 +22,15 @@ jobs:
       - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
         with: {node-version: '20.19.6', cache: npm, cache-dependency-path: apps/web/package-lock.json}
       - run: npm ci --prefix apps/web && npx --prefix apps/web playwright install --with-deps chromium
-      - run: docker compose -f deploy/compose/compose.demo.yaml up -d --build --wait
+      - name: Start demo and verify the one-shot loader
+        run: |
+          docker compose -f deploy/compose/compose.demo.yaml up -d --build
+          docker compose -f deploy/compose/compose.demo.yaml wait demo-loader
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8088/health/ready; then exit 0; fi
+            sleep 2
+          done
+          exit 1
       - run: npm --prefix apps/web run test:e2e
       - if: always()
         run: docker compose -f deploy/compose/compose.demo.yaml logs --no-color > compose.log && docker compose -f deploy/compose/compose.demo.yaml down -v
