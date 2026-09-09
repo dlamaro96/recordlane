@@ -1,0 +1,13 @@
+.git
+.github
+.env
+.env.*
+**/.venv
+**/__pycache__
+**/node_modules
+**/dist
+docs/evidence
+test-results
+playwright-report
+deploy/offline/dist
+
