@@ -18,7 +18,7 @@ dependencies = [
   "psycopg[binary]==3.3.5",
   "PyYAML==6.0.3",
   "httpx==0.28.1",
-  "python-multipart==0.0.20",
+  "python-multipart==0.0.31",
   "cryptography==46.0.1",
   "PyJWT[crypto]==2.10.1",
 ]
