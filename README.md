@@ -47,7 +47,13 @@ separate, destructive operator action and is not performed by the CLI.
 See [REQUIREMENTS.yaml](REQUIREMENTS.yaml) for validation level and blockers;
 [SPEC.md](SPEC.md) is the complete contract. Architecture, operations,
 connector, SDK, deployment, security, and contribution guides are linked from
-the documentation site as they pass their gates.
+the [published documentation site](https://dlamaro96.github.io/recordlane-docs/).
+
+Repository ecosystem: [platform](https://github.com/dlamaro96/recordlane),
+[Python SDK](https://github.com/dlamaro96/recordlane-python),
+[TypeScript SDK](https://github.com/dlamaro96/recordlane-typescript),
+[connectors and domain packs](https://github.com/dlamaro96/recordlane-ecosystem),
+and [documentation source](https://github.com/dlamaro96/recordlane-docs).
 
 ## Development
 
@@ -65,4 +71,3 @@ Run `./recordlane test` before proposing changes. Security issues must follow
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
-

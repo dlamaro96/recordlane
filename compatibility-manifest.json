@@ -10,6 +10,14 @@
     "recordlane-ecosystem": "0.1.0a1",
     "recordlane-docs": "0.1.0-alpha.1"
   },
+  "repository_urls": {
+    "recordlane": "https://github.com/dlamaro96/recordlane",
+    "recordlane-python": "https://github.com/dlamaro96/recordlane-python",
+    "recordlane-typescript": "https://github.com/dlamaro96/recordlane-typescript",
+    "recordlane-ecosystem": "https://github.com/dlamaro96/recordlane-ecosystem",
+    "recordlane-docs": "https://github.com/dlamaro96/recordlane-docs"
+  },
+  "documentation_url": "https://dlamaro96.github.io/recordlane-docs/",
   "deployment": {"helm_chart": "0.1.0-alpha.1", "compose_schema": "demo-v1/production-v1"},
   "local_images": {
     "recordlane-demo-api": "sha256:d2aec182a3793d1d6962851f02d645a106ddff10cef602387073c30de2d7b368",

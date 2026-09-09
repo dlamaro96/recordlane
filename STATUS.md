@@ -23,7 +23,7 @@ Updated: 2026-09-09T16:10:00+04:00
 - Product implementation: WORKING ALPHA. The live Compose demo, mastering/governance engine, UI, SDKs, connector kit, docs, recovery tooling, diagrams, and local packages are implemented and validated within the limits in `REQUIREMENTS.yaml`.
 - Verification: 22 platform tests, frontend unit/build, 2 Playwright scenarios, SDK live tests, connector conformance, Compose validation, Helm lint/render, docs check/build, real screenshot capture, isolated PostgreSQL restore, Gitleaks, and arm64 image Trivy scans pass.
 - Release readiness: BLOCKED. Interactive production OIDC, exhaustive authorization/RLS, configuration activation/import, failure injection, prior-schema upgrade, clean production/Kubernetes/offline installs, amd64 verification, and signed published artifacts remain incomplete.
-- External publication: PENDING remote creation and readback; no package, image, chart, or GitHub Release is claimed.
+- External publication: COMPLETE for the five public source repositories and GitHub Pages documentation. Discussions, private vulnerability reporting, secret scanning/push protection, and protected `main` rules were verified by API readback. No package, registry image, chart repository, signature, attestation, or GitHub Release is claimed while the release gate remains blocked.
 
 ## Evidence convention
 

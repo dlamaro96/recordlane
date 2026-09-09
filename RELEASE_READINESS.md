@@ -16,8 +16,8 @@ keeps every other skipped outcome `BLOCKED`. A skip is not a pass.
 - [ ] Offline, Compose production, and disposable Kubernetes validation
 - [ ] Backup/isolated restore and prior-schema upgrade rehearsal
 - [ ] Security, licensing, secrets, accessibility, and dependency gates
-- [ ] Real screenshots, diagrams, documentation build, and link checks
-- [ ] Published repository/release verification
+- [x] Real screenshots, diagrams, documentation build, and link checks
+- [ ] Published release/package/image/chart verification (five source repositories and GitHub Pages are verified)
 
 ## Current blocking set
 

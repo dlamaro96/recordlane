@@ -1,5 +1,18 @@
 # Maintainer handover
 
+## Published source and local workspaces
+
+- Platform: https://github.com/dlamaro96/recordlane — `/Users/daniamaro96/Documents/ChatGPT/MDM`
+- Python SDK: https://github.com/dlamaro96/recordlane-python — `/Users/daniamaro96/Documents/ChatGPT/recordlane-python`
+- TypeScript SDK: https://github.com/dlamaro96/recordlane-typescript — `/Users/daniamaro96/Documents/ChatGPT/recordlane-typescript`
+- Ecosystem: https://github.com/dlamaro96/recordlane-ecosystem — `/Users/daniamaro96/Documents/ChatGPT/recordlane-ecosystem`
+- Documentation: https://github.com/dlamaro96/recordlane-docs — `/Users/daniamaro96/Documents/ChatGPT/recordlane-docs`
+- Live static docs: https://dlamaro96.github.io/recordlane-docs/
+
+These are source-preview repositories, not a production release. No PyPI/npm
+package, registry image, chart repository, signature, or GitHub Release is
+claimed while the mandatory acceptance gate remains blocked.
+
 ## Make the next change
 
 Run `./recordlane doctor`, `./recordlane demo`, then make one vertical change across models/service/API/UI/tests. Keep source contributions immutable, apply workspace predicates to every object query, preserve master version/provenance, and never imply downstream consistency from local success. Run `./recordlane test`, Playwright, Compose integration, Helm lint/render, and the affected recovery/security checks.

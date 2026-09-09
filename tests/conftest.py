@@ -15,8 +15,17 @@ os.environ["RECORDLANE_DEMO_MODE"] = "true"
 os.environ["RECORDLANE_DEMO_ALLOW_REVERSE_PROXY"] = "false"
 
 
+@pytest.fixture(autouse=True)
+def reset_test_database():
+    from recordlane.database import Base, engine
+
+    Base.metadata.drop_all(engine)
+    Base.metadata.create_all(engine)
+    yield
+
+
 @pytest.fixture(scope="session", autouse=True)
-def clean_test_database():
+def remove_test_database_after_session():
     yield
     from recordlane.database import engine
 
