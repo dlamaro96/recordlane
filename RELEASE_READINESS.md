@@ -3,16 +3,16 @@
 Target: 0.1.0-alpha.1
 
 The project is a working open alpha but is not production-release-ready. The
-named acceptance suite currently reports 10 passed and 14 explicitly skipped;
+named acceptance suite currently reports 11 passed and 13 explicitly skipped;
 the matrix gives two skipped scenarios narrower `INTEGRATION_TESTED` status and
-keeps every other skipped outcome `BLOCKED`. A skip is not a pass.
+keeps the other 11 skipped outcomes `BLOCKED`. A skip is not a pass.
 
 ## Mandatory gates
 
 - [ ] Clean-install demo and bundled identity provider
 - [x] Core conflicting-source mastering, approval/staleness, merge/split repair, multilingual constraints, SDK/conformance, real UI asset, and security-evidence scenarios
 - [ ] Workspace/field/action authorization and deprovisioning
-- [ ] SDK and connector conformance against the running service
+- [x] SDK and connector conformance against the running service
 - [ ] Offline, Compose production, and disposable Kubernetes validation
 - [ ] Backup/isolated restore and prior-schema upgrade rehearsal
 - [ ] Security, licensing, secrets, accessibility, and dependency gates

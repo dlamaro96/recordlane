@@ -12,7 +12,8 @@ tests/acceptance/test_contract_scenarios.py ss...sss..ss.sss.s....ss     [100%]
 
 ================== 11 passed, 13 skipped, 2 warnings in 7.81s ==================
 
-The thirteen skips are explicit BLOCKED scenarios; none is counted as a pass.
-PostgreSQL 17 evidence for stable-source lifecycle, executable policy,
-remastering, worker recovery, and alpha migration is recorded in the current
-validation run and STATUS.md.
+None of the thirteen skips is counted as a pass. Two have narrower
+INTEGRATION_TESTED evidence and the other eleven remain BLOCKED, as recorded in
+REQUIREMENTS.yaml. PostgreSQL 17 evidence for stable-source lifecycle,
+executable policy, remastering, worker recovery, and alpha migration is
+recorded in the current validation run and STATUS.md.
