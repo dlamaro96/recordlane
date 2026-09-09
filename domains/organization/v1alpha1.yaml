@@ -1,0 +1,16 @@
+apiVersion: recordlane.io/v1alpha1
+kind: DomainPack
+metadata: {name: organization, version: 0.1.0}
+spec:
+  entity: OrganizationUnit
+  mode: coexistence
+  identifierNamespaces: [organization_code, cost_center]
+  attributes:
+    - {key: name, type: string, required: true}
+    - {key: organization_code, type: string, required: true}
+    - {key: effective_from, type: date, required: true}
+    - {key: effective_to, type: date, required: false}
+  relationships:
+    - {type: reports_to, target: OrganizationUnit, cardinality: many-to-one, effectiveDated: true}
+  validation:
+    - {attribute: organization_code, uniqueWithin: tenant}

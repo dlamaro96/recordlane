@@ -1,0 +1,7 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: {name: recordlane}
+spec:
+  maxUnavailable: 1
+  selector: {matchLabels: {app.kubernetes.io/name: recordlane, app.kubernetes.io/component: api}}
+

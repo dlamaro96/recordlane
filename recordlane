@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DEMO_COMPOSE="$ROOT_DIR/deploy/compose/compose.demo.yaml"
+PROD_COMPOSE="$ROOT_DIR/deploy/compose/compose.production.yaml"
+
+usage() {
+  printf '%s\n' "Recordlane 0.1.0-alpha.1" "Usage: ./recordlane <doctor|demo|up|down|status|logs|configure|migrate|validate|test|seed|backup|restore|upgrade|export|acceptance>"
+}
+
+case "${1:-}" in
+  doctor)
+    failures=0
+    for tool in docker git; do
+      if command -v "$tool" >/dev/null; then printf 'ok      %s\n' "$tool"; else printf 'missing %s\n' "$tool"; failures=$((failures+1)); fi
+    done
+    if docker info >/dev/null 2>&1; then printf 'ok      Docker engine\n'; else printf 'missing Docker engine\n'; failures=$((failures+1)); fi
+    docker compose -f "$DEMO_COMPOSE" config --quiet || failures=$((failures+1))
+    if [ "$failures" -gt 0 ]; then exit 1; fi
+    printf 'ready   loopback demo at http://127.0.0.1:8088\n'
+    ;;
+  demo)
+    docker compose -f "$DEMO_COMPOSE" up -d --build
+    printf 'Recordlane: http://127.0.0.1:8088\nIdentity admin: http://127.0.0.1:58080\n'
+    ;;
+  up)
+    env_file="$ROOT_DIR/deploy/compose/.env.production"
+    if [ ! -f "$env_file" ]; then printf 'Production preflight: create %s from .env.production.example.\n' "$env_file" >&2; exit 2; fi
+    docker compose --env-file "$env_file" -f "$PROD_COMPOSE" up -d
+    ;;
+  down)
+    # Ordinary shutdown intentionally preserves named volumes.
+    docker compose -f "$DEMO_COMPOSE" down
+    ;;
+  status) docker compose -f "$DEMO_COMPOSE" ps ;;
+  logs) docker compose -f "$DEMO_COMPOSE" logs --tail=200 "${2:-api}" ;;
+  configure) printf 'Edit a draft in Model studio or validate a package with ./recordlane validate <file>.\n' ;;
+  migrate) docker compose -f "$DEMO_COMPOSE" exec api python -m recordlane.operations.migrate ;;
+  validate)
+    if [ -n "${2:-}" ]; then
+      "$ROOT_DIR/backend/.venv/bin/python" "$ROOT_DIR/scripts/validate_config.py" "$2"
+    else
+      "$ROOT_DIR/backend/.venv/bin/python" "$ROOT_DIR/scripts/validate_requirements.py"
+      docker compose -f "$DEMO_COMPOSE" config --quiet
+    fi
+    ;;
+  test)
+    test_dir="$(mktemp -d)"
+    RECORDLANE_DEMO_MODE=true RECORDLANE_DATABASE_URL="sqlite:///$test_dir/recordlane-test.db" "$ROOT_DIR/backend/.venv/bin/pytest" "$ROOT_DIR/tests"
+    npm --prefix "$ROOT_DIR/apps/web" test
+    ;;
+  seed)
+    curl --fail --silent --show-error http://127.0.0.1:8088/api/v1/overview >/dev/null
+    printf 'Demo is seeded idempotently during API startup. Production startup never seeds.\n'
+    ;;
+  backup)
+    output="${2:-}"
+    if [ -z "$output" ] || [ "${output#/}" = "$output" ]; then printf 'Usage: ./recordlane backup /absolute/path/name.dump\n' >&2; exit 2; fi
+    if [ -e "$output" ]; then printf 'Refusing to overwrite existing backup: %s\n' "$output" >&2; exit 2; fi
+    docker compose -f "$DEMO_COMPOSE" exec -T postgres pg_dump --format=custom --no-owner --no-privileges -U recordlane_migrator -d recordlane > "$output"
+    sha256sum "$output" > "$output.sha256" 2>/dev/null || shasum -a 256 "$output" > "$output.sha256"
+    printf 'Backup written to %s with checksum %s; key material and sink delivery state are intentionally excluded.\n' "$output" "$output.sha256"
+    ;;
+  restore)
+    input="${2:-}"; scope="${3:-}"
+    if [ ! -f "$input" ] || [ "$scope" != "--isolated-demo" ] || [ "${input#/}" = "$input" ]; then printf 'Usage: ./recordlane restore /absolute/path/name.dump --isolated-demo\n' >&2; exit 2; fi
+    if [ -f "$input.sha256" ]; then (cd "$(dirname "$input")" && (sha256sum -c "$(basename "$input").sha256" 2>/dev/null || shasum -a 256 -c "$(basename "$input").sha256")); fi
+    restore_db="recordlane_restore_$(date -u +%Y%m%d%H%M%S)"
+    docker compose -f "$DEMO_COMPOSE" exec -T postgres createdb -U recordlane_migrator "$restore_db"
+    if ! docker compose -f "$DEMO_COMPOSE" exec -T postgres pg_restore --exit-on-error --no-owner --no-privileges -U recordlane_migrator -d "$restore_db" < "$input"; then
+      printf 'Restore failed; isolated database %s is retained for diagnosis.\n' "$restore_db" >&2; exit 3
+    fi
+    restored_counts="$(docker compose -f "$DEMO_COMPOSE" exec -T postgres psql -U recordlane_migrator -d "$restore_db" -Atc "select (select count(*) from source_records)||','||(select count(*) from entities)||','||(select count(*) from review_tasks)||','||(select count(*) from configuration_versions)||','||(select count(*) from outbox_events);")"
+    printf 'Restored isolated database: %s\nVerified counts (source_records,entities,review_tasks,configurations,outbox): %s\nNo API is started for this database; outbound connectors therefore remain disabled pending reconciliation.\n' "$restore_db" "$restored_counts"
+    ;;
+  upgrade) printf 'Run preflight and backup, then follow docs/guides/upgrade.md. Database downgrade is restore-based.\n' ;;
+  export)
+    case "${2:-entities}" in
+      entities) curl --fail --silent --show-error -H 'X-Recordlane-Role: administrator' http://127.0.0.1:8088/api/v1/entities ;;
+      configuration) curl --fail --silent --show-error -H 'X-Recordlane-Role: administrator' http://127.0.0.1:8088/api/v1/configurations ;;
+      *) printf 'Usage: ./recordlane export [entities|configuration]\n' >&2; exit 2 ;;
+    esac
+    ;;
+  acceptance) "$ROOT_DIR/backend/.venv/bin/pytest" "$ROOT_DIR/tests/acceptance" ;;
+  *) usage; exit 2 ;;
+esac

@@ -1,0 +1,26 @@
+name: recordlane
+services:
+  api:
+    image: ghcr.io/dlamaro96/recordlane-api:0.1.0-alpha.1
+    env_file: [.env.production]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    restart: unless-stopped
+  worker:
+    image: ghcr.io/dlamaro96/recordlane-api:0.1.0-alpha.1
+    command: ["python", "-m", "recordlane.jobs.worker"]
+    env_file: [.env.production]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    restart: unless-stopped
+  web:
+    image: ghcr.io/dlamaro96/recordlane-web:0.1.0-alpha.1
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    restart: unless-stopped

@@ -1,0 +1,16 @@
+apiVersion: recordlane.io/v1alpha1
+kind: DomainPack
+metadata: {name: location, version: 0.1.0}
+spec:
+  entity: Location
+  mode: consolidation
+  identifierNamespaces: [location_code, geonames_id]
+  attributes:
+    - {key: name, type: string, required: true}
+    - {key: location_code, type: string, required: true}
+    - {key: country, type: reference, required: true}
+    - {key: timezone, type: string, required: false}
+  relationships:
+    - {type: contained_by, target: Location, cardinality: many-to-one, effectiveDated: true}
+  validation:
+    - {attribute: location_code, uniqueWithin: tenant}

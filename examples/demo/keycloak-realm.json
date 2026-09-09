@@ -1,0 +1,25 @@
+{
+  "realm": "recordlane",
+  "enabled": true,
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": false,
+  "roles": {"realm": [{"name":"administrator"},{"name":"modeler"},{"name":"integration_operator"},{"name":"steward"},{"name":"approver"},{"name":"auditor"},{"name":"read_only"}]},
+  "clients": [{
+    "clientId": "recordlane",
+    "publicClient": true,
+    "standardFlowEnabled": true,
+    "directAccessGrantsEnabled": false,
+    "redirectUris": ["http://127.0.0.1:8088/*"],
+    "webOrigins": ["http://127.0.0.1:8088"],
+    "attributes": {"pkce.code.challenge.method": "S256"}
+  }],
+  "users": [{
+    "username": "demo-steward",
+    "enabled": true,
+    "emailVerified": true,
+    "realmRoles": ["steward"],
+    "attributes": {"recordlane_workspace": ["demo"]},
+    "credentials": [{"type":"password","value":"demo-steward-change-me","temporary":true}]
+  }]
+}
+

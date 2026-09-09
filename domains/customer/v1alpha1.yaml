@@ -1,0 +1,16 @@
+apiVersion: recordlane.io/v1alpha1
+kind: DomainPack
+metadata: {name: customer, version: 0.1.0}
+spec:
+  entity: Customer
+  mode: registry
+  identifierNamespaces: [customer_number, tax_id, email]
+  attributes:
+    - {key: display_name, type: string, required: true}
+    - {key: customer_number, type: string, required: true}
+    - {key: country, type: reference, required: true}
+    - {key: consent_status, type: string, required: false}
+  relationships:
+    - {type: household_member, target: Customer, cardinality: many-to-many, effectiveDated: true}
+  validation:
+    - {attribute: consent_status, allowedValues: [granted, denied, unknown]}

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://recordlane.dev/contracts/config/domain-pack-1.0.schema.json",
+  "title": "Recordlane domain pack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": {"const": "recordlane.io/v1alpha1"},
+    "kind": {"const": "DomainPack"},
+    "metadata": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {"name": {"type": "string", "pattern": "^[a-z][a-z0-9-]+$"}, "version": {"type": "string"}}
+    },
+    "spec": {
+      "type": "object",
+      "required": ["entity", "mode", "attributes", "identifierNamespaces"],
+      "properties": {
+        "entity": {"type": "string"},
+        "mode": {"enum": ["registry", "consolidation", "centralized", "coexistence"]},
+        "attributes": {"type": "array", "items": {"type": "object", "required": ["key", "type"], "properties": {"key": {"type": "string"}, "type": {"enum": ["string", "integer", "decimal", "boolean", "date", "datetime", "reference"]}, "required": {"type": "boolean"}}},
+        "identifierNamespaces": {"type": "array", "items": {"type": "string"}},
+        "relationships": {"type": "array", "items": {"type": "object"}},
+        "validation": {"type": "array", "items": {"type": "object"}}
+      }
+    }
+  }
+}

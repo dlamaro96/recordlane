@@ -1,0 +1,9 @@
+apiVersion: v2
+name: recordlane
+description: Self-hosted multidomain master data management
+type: application
+version: 0.1.0-alpha.1
+appVersion: 0.1.0-alpha.1
+annotations:
+  artifacthub.io/license: Apache-2.0
+

@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: {{ include "recordlane.name" . }}, labels: {app.kubernetes.io/name: recordlane}}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector: {matchLabels: {app.kubernetes.io/name: recordlane, app.kubernetes.io/component: api}}
+  strategy: {type: RollingUpdate, rollingUpdate: {maxUnavailable: 0, maxSurge: 1}}
+  template:
+    metadata: {labels: {app.kubernetes.io/name: recordlane, app.kubernetes.io/component: api}}
+    spec:
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, runAsGroup: 10001, fsGroup: 10001, seccompProfile: {type: RuntimeDefault}}
+      topologySpreadConstraints:
+        - {maxSkew: 1, topologyKey: kubernetes.io/hostname, whenUnsatisfiable: ScheduleAnyway, labelSelector: {matchLabels: {app.kubernetes.io/name: recordlane, app.kubernetes.io/component: api}}}
+      containers:
+        - name: web
+          image: "{{ .Values.image.web }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports: [{name: web, containerPort: 8080}]
+          readinessProbe: {httpGet: {path: /, port: web}, periodSeconds: 10, timeoutSeconds: 3}
+          resources: {{ toYaml .Values.resources.web | nindent 12 }}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          volumeMounts: [{name: web-tmp, mountPath: /tmp}]
+        - name: api
+          image: "{{ .Values.image.api }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports: [{name: http, containerPort: 8000}]
+          env:
+            - {name: RECORDLANE_ENVIRONMENT, value: production}
+            - {name: RECORDLANE_DATABASE_URL, valueFrom: {secretKeyRef: {name: {{ .Values.database.secretName }}, key: {{ .Values.database.urlKey }}}}}
+            - {name: RECORDLANE_OIDC_ISSUER, value: {{ required "oidc.issuer is required" .Values.oidc.issuer | quote }}}
+            - {name: RECORDLANE_OIDC_AUDIENCE, value: {{ .Values.oidc.audience | quote }}}
+            - {name: RECORDLANE_SESSION_SECRET, valueFrom: {secretKeyRef: {name: {{ .Values.sessionSecret.secretName }}, key: {{ .Values.sessionSecret.key }}}}}
+            - {name: RECORDLANE_MASTER_KEY_FILE, value: /run/recordlane/master-key}
+          volumeMounts: [{name: master-key, mountPath: /run/recordlane, readOnly: true}]
+          readinessProbe: {httpGet: {path: /health/ready, port: http}, periodSeconds: 10, timeoutSeconds: 3}
+          livenessProbe: {httpGet: {path: /health/live, port: http}, periodSeconds: 20, timeoutSeconds: 3}
+          resources: {{ toYaml .Values.resources.api | nindent 12 }}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+      volumes:
+        - {name: master-key, secret: {secretName: {{ .Values.masterKey.secretName }}, items: [{key: {{ .Values.masterKey.key }}, path: master-key}]}}
+        - {name: web-tmp, emptyDir: {medium: Memory, sizeLimit: 32Mi}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: recordlane-worker, labels: {app.kubernetes.io/name: recordlane, app.kubernetes.io/component: worker}}
+spec:
+  replicas: {{ .Values.workerReplicaCount }}
+  selector: {matchLabels: {app.kubernetes.io/name: recordlane, app.kubernetes.io/component: worker}}
+  template:
+    metadata: {labels: {app.kubernetes.io/name: recordlane, app.kubernetes.io/component: worker}}
+    spec:
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: worker
+          image: "{{ .Values.image.api }}:{{ .Values.image.tag }}"
+          command: [python, -m, recordlane.jobs.worker]
+          env:
+            - {name: RECORDLANE_ENVIRONMENT, value: production}
+            - {name: RECORDLANE_DATABASE_URL, valueFrom: {secretKeyRef: {name: {{ .Values.database.secretName }}, key: {{ .Values.database.urlKey }}}}}
+            - {name: RECORDLANE_OIDC_ISSUER, value: {{ required "oidc.issuer is required" .Values.oidc.issuer | quote }}}
+            - {name: RECORDLANE_OIDC_AUDIENCE, value: {{ .Values.oidc.audience | quote }}}
+            - {name: RECORDLANE_SESSION_SECRET, valueFrom: {secretKeyRef: {name: {{ .Values.sessionSecret.secretName }}, key: {{ .Values.sessionSecret.key }}}}}
+            - {name: RECORDLANE_MASTER_KEY_FILE, value: /run/recordlane/master-key}
+          volumeMounts: [{name: master-key, mountPath: /run/recordlane, readOnly: true}]
+          resources: {{ toYaml .Values.resources.worker | nindent 12 }}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+      volumes: [{name: master-key, secret: {secretName: {{ .Values.masterKey.secretName }}, items: [{key: {{ .Values.masterKey.key }}, path: master-key}]}}]

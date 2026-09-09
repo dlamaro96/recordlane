@@ -1,0 +1,16 @@
+apiVersion: recordlane.io/v1alpha1
+kind: DomainPack
+metadata: {name: asset, version: 0.1.0}
+spec:
+  entity: Asset
+  mode: registry
+  identifierNamespaces: [asset_tag, serial_number]
+  attributes:
+    - {key: asset_tag, type: string, required: true}
+    - {key: serial_number, type: string, required: false}
+    - {key: commissioned_on, type: date, required: false}
+    - {key: status, type: string, required: true}
+  relationships:
+    - {type: installed_at, target: Location, cardinality: many-to-one, effectiveDated: true}
+  validation:
+    - {attribute: status, allowedValues: [planned, active, retired]}

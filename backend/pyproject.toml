@@ -1,0 +1,47 @@
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "recordlane"
+version = "0.1.0a1"
+description = "Open-source, self-hosted multidomain master data management"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Apache-2.0"}
+dependencies = [
+  "fastapi==0.141.1",
+  "uvicorn[standard]==0.35.0",
+  "pydantic==2.13.5",
+  "pydantic-settings==2.11.0",
+  "SQLAlchemy==2.0.52",
+  "psycopg[binary]==3.3.5",
+  "PyYAML==6.0.3",
+  "httpx==0.28.1",
+  "python-multipart==0.0.20",
+  "cryptography==46.0.1",
+  "PyJWT[crypto]==2.10.1",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest==8.4.2",
+  "pytest-cov==7.0.0",
+  "hypothesis==6.140.3",
+  "ruff==0.13.2",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/recordlane"]
+
+[tool.pytest.ini_options]
+testpaths = ["../tests"]
+addopts = "-q --strict-markers"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+ignore = ["S101"]

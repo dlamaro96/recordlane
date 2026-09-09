@@ -1,0 +1,31 @@
+replicaCount: 2
+workerReplicaCount: 2
+image:
+  api: ghcr.io/dlamaro96/recordlane-api
+  web: ghcr.io/dlamaro96/recordlane-web
+  tag: 0.1.0-alpha.1
+  pullPolicy: IfNotPresent
+database:
+  secretName: recordlane-database
+  urlKey: database-url
+oidc:
+  issuer: ""
+  audience: recordlane
+sessionSecret:
+  secretName: recordlane-session
+  key: session-secret
+masterKey:
+  secretName: recordlane-master-key
+  key: master-key
+ingress:
+  enabled: false
+  className: ""
+  host: recordlane.example.com
+  tlsSecretName: ""
+resources:
+  api: {requests: {cpu: 200m, memory: 256Mi}, limits: {cpu: "2", memory: 1Gi}}
+  web: {requests: {cpu: 50m, memory: 64Mi}, limits: {cpu: 500m, memory: 256Mi}}
+  worker: {requests: {cpu: 200m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
+networkPolicy:
+  enabled: true
+  allowedEgressCIDRs: []

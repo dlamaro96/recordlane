@@ -1,0 +1,82 @@
+name: recordlane-demo
+services:
+  postgres:
+    image: postgres:17.6-bookworm
+    environment:
+      POSTGRES_DB: recordlane
+      POSTGRES_USER: recordlane_migrator
+      POSTGRES_PASSWORD: demo-only-migrator
+    volumes: [recordlane-db:/var/lib/postgresql/data]
+    healthcheck: {test: [CMD-SHELL, "pg_isready -U recordlane_migrator -d recordlane"], interval: 5s, timeout: 3s, retries: 20}
+    ports: ["127.0.0.1:55432:5432"]
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.3
+    command: ["start-dev", "--http-port=8080", "--import-realm"]
+    environment: {KC_BOOTSTRAP_ADMIN_USERNAME: demo-admin, KC_BOOTSTRAP_ADMIN_PASSWORD: demo-only-change-me}
+    volumes: [../../examples/demo/keycloak-realm.json:/opt/keycloak/data/import/recordlane-realm.json:ro]
+    ports: ["127.0.0.1:58080:8080"]
+  api:
+    build: {context: ../../backend}
+    environment:
+      RECORDLANE_DATABASE_URL: postgresql+psycopg://recordlane_migrator:demo-only-migrator@postgres:5432/recordlane
+      RECORDLANE_DEMO_MODE: "true"
+      RECORDLANE_DEMO_ALLOW_REVERSE_PROXY: "true"
+      RECORDLANE_ALLOWED_ORIGINS: '["http://127.0.0.1:8088"]'
+      RECORDLANE_PUBLIC_URL: http://127.0.0.1:8088
+      RECORDLANE_OUTBOUND_ENABLED: "true"
+      RECORDLANE_PUBLICATION_URL: http://demo-sink:8082/events
+      RECORDLANE_WEBHOOK_SECRET: demo-only-signing-key
+    depends_on: {postgres: {condition: service_healthy}}
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+  web:
+    build: {context: ../../apps/web}
+    depends_on: [api]
+    ports: ["127.0.0.1:8088:8080"]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+  demo-loader:
+    build: {context: ../../backend}
+    command: ["python", "-m", "recordlane.demo_loader"]
+    environment:
+      RECORDLANE_DATABASE_URL: postgresql+psycopg://recordlane_migrator:demo-only-migrator@postgres:5432/recordlane
+      RECORDLANE_DEMO_MODE: "true"
+      RECORDLANE_DEMO_ALLOW_REVERSE_PROXY: "true"
+    depends_on:
+      api: {condition: service_healthy}
+      demo-source: {condition: service_healthy}
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+  demo-source:
+    build: {context: ../../backend}
+    command: ["uvicorn", "recordlane.demo_services:source_app", "--host", "0.0.0.0", "--port", "8081"]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    healthcheck: {test: [CMD, "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/health')"], interval: 10s, timeout: 3s, retries: 5}
+  sink-init:
+    image: alpine:3.22.1
+    command: ["sh", "-c", "chown 10001:10001 /data"]
+    volumes: [consumer-data:/data]
+    cap_drop: [ALL]
+    cap_add: [CHOWN]
+    security_opt: [no-new-privileges:true]
+  demo-sink:
+    build: {context: ../../backend}
+    command: ["uvicorn", "recordlane.demo_services:sink_app", "--host", "0.0.0.0", "--port", "8082"]
+    environment: {RECORDLANE_SINK_DB: /data/consumer.db, RECORDLANE_SINK_SECRET: demo-only-signing-key}
+    volumes: [consumer-data:/data]
+    depends_on: {sink-init: {condition: service_completed_successfully}}
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    healthcheck: {test: [CMD, "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8082/health')"], interval: 10s, timeout: 3s, retries: 5}
+volumes:
+  recordlane-db: {}
+  consumer-data: {}

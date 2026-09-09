@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://recordlane.dev/contracts/connectors/manifest-1.0.schema.json",
+  "title": "Recordlane connector capability manifest",
+  "type": "object",
+  "required": ["id", "direction", "full_read", "incremental", "deletions", "auth", "checkpoint", "consistency", "validation"],
+  "properties": {
+    "id": {"type":"string","pattern":"^[a-z][a-z0-9-]+$"},
+    "direction": {"type":"array","items":{"enum":["read","write","controlled_write"]},"minItems":1},
+    "full_read": {"type":"boolean"},
+    "incremental": {"type":"string"},
+    "deletions": {"type":"string"},
+    "auth": {"type":"array","items":{"type":"string"}},
+    "write_operations": {"type":"array","items":{"type":"string"}},
+    "checkpoint": {"type":"string"},
+    "consistency": {"type":"string"},
+    "validation": {"enum":["not_implemented","unit_tested","contract_tested_only","emulator_tested","local_integration_pending","local_integration_tested","live_vendor_tested"]},
+    "limitations": {"type":"array","items":{"type":"string"}}
+  },
+  "additionalProperties": false
+}
+

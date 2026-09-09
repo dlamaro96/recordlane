@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://recordlane.dev/contracts/events/master-change-1.0.schema.json",
+  "title": "Recordlane master change event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["specversion", "id", "type", "source", "time", "subject", "data"],
+  "properties": {
+    "specversion": {"const": "1.0"},
+    "id": {"type": "string", "format": "uuid"},
+    "type": {"enum": ["io.recordlane.master.approved.v1", "io.recordlane.entity.corrected.v1"]},
+    "source": {"type": "string", "format": "uri-reference"},
+    "time": {"type": "string", "format": "date-time"},
+    "subject": {"type": "string"},
+    "data": {
+      "type": "object",
+      "required": ["workspace_id", "entity_id", "entity_version", "payload"],
+      "properties": {
+        "workspace_id": {"type": "string", "format": "uuid"},
+        "entity_id": {"type": "string", "format": "uuid"},
+        "entity_version": {"type": "integer", "minimum": 1},
+        "payload": {"type": "object"}
+      }
+    }
+  }
+}

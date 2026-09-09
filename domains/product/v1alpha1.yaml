@@ -1,0 +1,16 @@
+apiVersion: recordlane.io/v1alpha1
+kind: DomainPack
+metadata: {name: product, version: 0.1.0}
+spec:
+  entity: Product
+  mode: centralized
+  identifierNamespaces: [sku, gtin]
+  attributes:
+    - {key: name, type: string, required: true}
+    - {key: sku, type: string, required: true}
+    - {key: category, type: reference, required: true}
+    - {key: active, type: boolean, required: true}
+  relationships:
+    - {type: component_of, target: Product, cardinality: many-to-many, effectiveDated: true}
+  validation:
+    - {attribute: sku, uniqueWithin: tenant}

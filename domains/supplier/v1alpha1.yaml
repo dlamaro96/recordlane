@@ -1,0 +1,16 @@
+apiVersion: recordlane.io/v1alpha1
+kind: DomainPack
+metadata: {name: supplier, version: 0.1.0}
+spec:
+  entity: Supplier
+  mode: consolidation
+  identifierNamespaces: [tax_id, registration_number, source_supplier_id]
+  attributes:
+    - {key: name, type: string, required: true}
+    - {key: tax_id, type: string, required: true}
+    - {key: country, type: reference, required: true}
+    - {key: status, type: string, required: true}
+  relationships:
+    - {type: parent_supplier, target: Supplier, cardinality: many-to-one, effectiveDated: true}
+  validation:
+    - {attribute: status, allowedValues: [active, inactive, suspended]}
