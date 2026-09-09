@@ -1,6 +1,6 @@
 # Execution status
 
-Updated: 2026-09-09T16:10:00+04:00
+Updated: 2026-09-09T18:15:00+04:00
 
 ## Environment
 
@@ -19,10 +19,10 @@ Updated: 2026-09-09T16:10:00+04:00
 ## Current state
 
 - Contract read completely and persisted: COMPLETE.
-- Requirement/evidence matrix: COMPLETE and honest; 10/24 acceptance scenarios pass, 2 have narrower integration evidence, and 12 are blocked.
-- Product implementation: WORKING ALPHA. The live Compose demo, mastering/governance engine, UI, SDKs, connector kit, docs, recovery tooling, diagrams, and local packages are implemented and validated within the limits in `REQUIREMENTS.yaml`.
-- Verification: 22 platform tests, frontend unit/build, 2 Playwright scenarios, SDK live tests, connector conformance, Compose validation, Helm lint/render, docs check/build, real screenshot capture, isolated PostgreSQL restore, Gitleaks, and arm64 image Trivy scans pass.
-- Release readiness: BLOCKED. Interactive production OIDC, exhaustive authorization/RLS, configuration import across workspaces, failure injection, prior-schema upgrade, clean production/Kubernetes/offline installs, amd64 verification, and signed published artifacts remain incomplete.
+- Requirement/evidence matrix: COMPLETE and honest; 11/24 acceptance scenarios pass, 2 have narrower integration evidence, and 11 remain blocked. Eight continuation subrequirements separate completed source identity, policy, simulation, UI, migration, and worker outcomes from remaining security/concurrency work.
+- Product implementation: WORKING ALPHA. Stable source objects, immutable observations, current-state projections, temporal membership, executable domain policies, exact impact simulation, governed remastering, versioned migrations, and a redesigned light-first UI now extend the existing mastering/governance journey.
+- Verification: 49 repository tests pass with 13 explicit acceptance skips; the focused PostgreSQL 17 lifecycle/policy/migration/worker run passes 20/20; frontend unit/build and 2 Playwright scenarios pass; 16 real light-mode screenshots were captured and visually inspected. Both SDKs, connector conformance, Compose, Helm, offline docs, Gitleaks, and arm64 image Trivy gates pass for tested commit `eec8e49`.
+- Release readiness: BLOCKED. Interactive production OIDC, exhaustive authorization/RLS, configuration import across workspaces, overlapping transaction and process-kill failure injection, clean production/Kubernetes/offline installs, amd64 verification, and signed published artifacts remain incomplete.
 - External publication: COMPLETE for the five public source repositories and GitHub Pages documentation. Discussions, private vulnerability reporting, secret scanning/push protection, and protected `main` rules were verified by API readback. No package, registry image, chart repository, signature, attestation, or GitHub Release is claimed while the release gate remains blocked.
 
 ## Evidence convention
