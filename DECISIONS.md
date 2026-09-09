@@ -57,3 +57,33 @@ The initial version is `0.1.0-alpha.1` until every mandatory acceptance gate has
 executed successfully. Missing live-vendor credentials remain BLOCKED and are
 not represented as connector validation.
 
+## ADR-008 — Source objects are stable; observations are immutable
+
+Status: accepted, 2026-09-09.
+
+A source object's identity is scoped by workspace, source, domain, and local
+key. Every received version is appended as an immutable observation with replay
+metadata. The source object points to its latest received and current usable
+observations and has effective-dated enterprise-membership history. Quarantine
+preserves the last usable contribution; tombstones retire only that source
+contribution. Negative identity decisions bind stable source-object IDs.
+
+## ADR-009 — One compiled policy drives mastering and simulation
+
+Status: accepted, 2026-09-09.
+
+Domain packs compile to one strict canonical policy used for normalization,
+validation, indexed blocking, comparison, survivorship, simulation, and
+remastering. Unsupported settings fail validation. Simulation and execution
+share the compiler; activation schedules durable recomputation and is rejected
+if its content/data dependency hash becomes stale.
+
+## ADR-010 — Schema changes are explicit versioned operations
+
+Status: accepted, 2026-09-09.
+
+The API process no longer mutates schemas at startup. Compose runs a one-shot
+migration dependency and Helm retains its pre-install/pre-upgrade hook. The
+migration ledger verifies revision checksums, serializes PostgreSQL execution
+with an advisory lock, recognizes the unversioned alpha baseline, and backfills
+stable source objects without discarding observation or membership evidence.

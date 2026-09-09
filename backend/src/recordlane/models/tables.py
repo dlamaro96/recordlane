@@ -4,7 +4,17 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, JSON, String, Text, UniqueConstraint
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from recordlane.database import Base
@@ -91,6 +101,74 @@ class Entity(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
 
 
+class SourceObject(Base):
+    """Stable source-system identity, independent from immutable observations."""
+
+    __tablename__ = "source_objects"
+    __table_args__ = (
+        UniqueConstraint("workspace_id", "source_id", "domain_key", "local_id"),
+        Index("ix_source_objects_current_entity", "workspace_id", "domain_key", "entity_id"),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    source_id: Mapped[str] = mapped_column(ForeignKey("sources.id"), index=True)
+    domain_key: Mapped[str] = mapped_column(String(80))
+    local_id: Mapped[str] = mapped_column(String(255))
+    entity_id: Mapped[str | None] = mapped_column(ForeignKey("entities.id"), index=True)
+    current_record_id: Mapped[str | None] = mapped_column(ForeignKey("source_records.id"))
+    latest_record_id: Mapped[str | None] = mapped_column(ForeignKey("source_records.id"))
+    current_sequence: Mapped[int | None] = mapped_column(Integer)
+    current_effective_from: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    retired: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
+
+
+class SourceObservationMeta(Base):
+    """Ordering and replay metadata kept beside an immutable source observation."""
+
+    __tablename__ = "source_observation_meta"
+    record_id: Mapped[str] = mapped_column(ForeignKey("source_records.id"), primary_key=True)
+    source_object_id: Mapped[str] = mapped_column(ForeignKey("source_objects.id"), index=True)
+    payload_hash: Mapped[str] = mapped_column(String(64))
+    source_sequence: Mapped[int | None] = mapped_column(Integer)
+    update_mode: Mapped[str] = mapped_column(String(16), default="full")
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class CandidateBlock(Base):
+    """Materialized multipass candidate keys for the current policy runtime."""
+
+    __tablename__ = "candidate_blocks"
+    __table_args__ = (
+        UniqueConstraint("record_id", "block_key"),
+        Index(
+            "ix_candidate_blocks_workspace_domain_key", "workspace_id", "domain_key", "block_key"
+        ),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    domain_key: Mapped[str] = mapped_column(String(80))
+    source_object_id: Mapped[str] = mapped_column(ForeignKey("source_objects.id"), index=True)
+    record_id: Mapped[str] = mapped_column(ForeignKey("source_records.id"), index=True)
+    block_key: Mapped[str] = mapped_column(String(320))
+
+
+class MembershipHistory(Base):
+    """Recoverable temporal history of a source object's enterprise membership."""
+
+    __tablename__ = "membership_history"
+    __table_args__ = (Index("ix_membership_history_object_time", "source_object_id", "valid_from"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    source_object_id: Mapped[str] = mapped_column(ForeignKey("source_objects.id"), index=True)
+    entity_id: Mapped[str] = mapped_column(ForeignKey("entities.id"), index=True)
+    valid_from: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    valid_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reason: Mapped[str] = mapped_column(String(120))
+    changed_by: Mapped[str] = mapped_column(String(255))
+
+
 class MasterVersion(Base):
     __tablename__ = "master_versions"
     __table_args__ = (UniqueConstraint("entity_id", "version"),)
@@ -136,6 +214,20 @@ class CannotLink(Base):
     right_record_id: Mapped[str] = mapped_column(ForeignKey("source_records.id"))
     reason: Mapped[str] = mapped_column(Text)
     created_by: Mapped[str] = mapped_column(String(255))
+
+
+class SourceObjectCannotLink(Base):
+    """A durable negative identity decision bound to stable source objects."""
+
+    __tablename__ = "source_object_cannot_links"
+    __table_args__ = (UniqueConstraint("workspace_id", "left_object_id", "right_object_id"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    left_object_id: Mapped[str] = mapped_column(ForeignKey("source_objects.id"))
+    right_object_id: Mapped[str] = mapped_column(ForeignKey("source_objects.id"))
+    reason: Mapped[str] = mapped_column(Text)
+    created_by: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
 
 class Relationship(Base):

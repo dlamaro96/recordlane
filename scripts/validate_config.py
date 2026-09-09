@@ -7,6 +7,11 @@ import sys
 from pathlib import Path
 import yaml
 
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "backend" / "src"))
+
+from recordlane.policy import PolicyError, compile_policy  # noqa: E402
+
 SECRET=re.compile(r"(^|_)(password|secret|token|private_key|client_secret)($|_)",re.I)
 
 def walk(value, path="$"):
@@ -31,6 +36,10 @@ def main() -> None:
             if key not in spec: raise SystemExit(f"domain pack spec.{key} is required")
         if spec["mode"] not in {"registry","consolidation","centralized","coexistence"}: raise SystemExit("unsupported mastering mode")
         if not re.fullmatch(r"[a-z][a-z0-9-]+",str(metadata.get("name",""))): raise SystemExit("invalid metadata.name")
+        try:
+            compile_policy(value)
+        except PolicyError as exc:
+            raise SystemExit(str(exc)) from exc
     print(f"valid: {path} ({value.get('apiVersion','unversioned')} {value.get('kind','configuration')})")
 
 if __name__=="__main__": main()

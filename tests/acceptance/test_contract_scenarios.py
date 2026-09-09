@@ -14,11 +14,12 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import create_engine, inspect, select
 
-from recordlane.database import SessionLocal
+from recordlane.database import Base, SessionLocal
 from recordlane.main import app
-from recordlane.models.tables import Entity, ReviewTask
+from recordlane.models.tables import Entity, ReviewTask, Workspace
+from recordlane.operations.migrate import migrate
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -164,7 +165,30 @@ def test_ap_isolated_restore_and_publication_reconciliation():
 
 
 def test_aq_previous_baseline_upgrade():
-    blocked("there is no previous supported schema fixture or migration rehearsal")
+    target = create_engine("sqlite://")
+    new_tables = {
+        "source_objects",
+        "source_observation_meta",
+        "candidate_blocks",
+        "membership_history",
+        "source_object_cannot_links",
+    }
+    legacy = [table for table in Base.metadata.sorted_tables if table.name not in new_tables]
+    Base.metadata.create_all(target, tables=legacy)
+    with target.begin() as connection:
+        connection.execute(
+            Workspace.__table__.insert().values(
+                id="acceptance-legacy", slug="acceptance-legacy", name="Preserve me"
+            )
+        )
+    assert migrate(target) == ["0001_alpha_baseline", "0002_stable_source_identity"]
+    assert new_tables <= set(inspect(target).get_table_names())
+    with target.connect() as connection:
+        assert connection.scalar(
+            select(Workspace.__table__.c.name).where(
+                Workspace.__table__.c.id == "acceptance-legacy"
+            )
+        ) == "Preserve me"
 
 
 def test_ar_worker_and_dependency_failure_injection():

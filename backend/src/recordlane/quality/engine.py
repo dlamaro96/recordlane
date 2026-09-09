@@ -3,6 +3,8 @@ import re
 import unicodedata
 from typing import Any
 
+from recordlane.policy import CompiledPolicy, compile_policy
+
 
 SPACE = re.compile(r"\s+")
 
@@ -11,7 +13,10 @@ def normalize_text(value: str) -> str:
     return SPACE.sub(" ", unicodedata.normalize("NFKC", value).strip()).casefold()
 
 
-def normalize_record(values: dict[str, Any]) -> dict[str, Any]:
+def normalize_record(values: dict[str, Any], policy: CompiledPolicy | dict[str, Any] | None = None) -> dict[str, Any]:
+    if policy is not None:
+        runtime = policy if isinstance(policy, CompiledPolicy) else compile_policy(policy)
+        return runtime.normalize(values)
     normalized: dict[str, Any] = {}
     for key, value in values.items():
         if isinstance(value, str):
@@ -24,16 +29,4 @@ def normalize_record(values: dict[str, Any]) -> dict[str, Any]:
 
 
 def validate_record(values: dict[str, Any], definition: dict[str, Any]) -> list[dict[str, str]]:
-    errors: list[dict[str, str]] = []
-    for attr in definition.get("attributes", []):
-        key = attr["key"]
-        value = values.get(key)
-        if attr.get("required") and (key not in values or value is None or value == ""):
-            errors.append({"attribute": key, "code": "required", "message": f"{attr['name']} is required"})
-        if value is not None and "allowed_values" in attr and value not in attr["allowed_values"]:
-            errors.append({"attribute": key, "code": "allowed_values", "message": f"{attr['name']} is not an allowed value"})
-        pattern = attr.get("pattern")
-        if value is not None and pattern and (not isinstance(value, str) or not re.fullmatch(pattern, value)):
-            errors.append({"attribute": key, "code": "pattern", "message": f"{attr['name']} has an invalid format"})
-    return errors
-
+    return compile_policy(definition).validate(values)

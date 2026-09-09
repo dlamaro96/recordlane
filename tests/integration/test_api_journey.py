@@ -4,7 +4,7 @@ from sqlalchemy import select
 
 from recordlane.database import SessionLocal
 from recordlane.main import app
-from recordlane.models.tables import Entity, ReviewTask
+from recordlane.models.tables import Entity, OutboxEvent, ReviewTask
 
 
 def test_seeded_mastering_journey_is_real_state():
@@ -65,3 +65,26 @@ def test_concurrent_update_invalidates_bound_approval():
         response = client.post(f"/api/v1/review-tasks/{task.id}/decision", headers={"X-Recordlane-Role": "approver", "X-Recordlane-User": "independent.approver"}, json={"decision": "approve", "reason": "Reviewed exact source evidence"})
         assert response.status_code == 409
         assert response.json()["detail"]["code"] == "stale_approval"
+
+
+def test_invalid_task_action_has_no_business_effect():
+    headers = {"X-Recordlane-Role": "steward", "X-Recordlane-User": "careful.steward"}
+    with TestClient(app) as client, SessionLocal() as db:
+        task = db.scalar(select(ReviewTask).where(
+            ReviewTask.kind == "master_approval",
+            ReviewTask.status == "open",
+        ))
+        entity = db.get(Entity, task.entity_id)
+        before_version = entity.version
+        before_outbox = len(db.scalars(select(OutboxEvent)).all())
+        response = client.post(
+            f"/api/v1/review-tasks/{task.id}/decision",
+            headers=headers,
+            json={"decision": "link", "reason": "This action is invalid for a master approval"},
+        )
+        assert response.status_code == 409
+        assert response.json()["detail"]["code"] == "invalid_task_decision"
+        db.expire_all()
+        assert db.get(ReviewTask, task.id).status == "open"
+        assert db.get(Entity, entity.id).version == before_version
+        assert len(db.scalars(select(OutboxEvent)).all()) == before_outbox

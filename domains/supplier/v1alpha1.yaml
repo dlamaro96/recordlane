@@ -14,3 +14,15 @@ spec:
     - {type: parent_supplier, target: Supplier, cardinality: many-to-one, effectiveDated: true}
   validation:
     - {attribute: status, allowedValues: [active, inactive, suspended]}
+  matching:
+    blocking:
+      - {fields: [country], prefix: {field: name, length: 5}}
+      - {fields: [tax_id]}
+    comparisons:
+      - {field: name, comparator: sequence_ratio, weight: 0.6}
+      - {field: tax_id, comparator: exact, weight: 0.3}
+      - {field: country, comparator: exact, weight: 0.1}
+    thresholds: {review: 0.58, auto_link: 0.84}
+    hard_conflicts: [tax_id]
+  survivorship:
+    default: verified_then_source_priority_then_observation_time

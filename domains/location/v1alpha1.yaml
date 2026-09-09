@@ -12,5 +12,3 @@ spec:
     - {key: timezone, type: string, required: false}
   relationships:
     - {type: contained_by, target: Location, cardinality: many-to-one, effectiveDated: true}
-  validation:
-    - {attribute: location_code, uniqueWithin: tenant}

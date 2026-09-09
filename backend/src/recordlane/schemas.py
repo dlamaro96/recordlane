@@ -18,6 +18,8 @@ class IncomingRecord(BaseModel):
     values: dict[str, Any]
     verification: dict[str, bool] = Field(default_factory=dict)
     effective_from: datetime | None = None
+    sequence: int | None = Field(default=None, ge=0)
+    update_mode: Literal["full", "partial"] = "full"
     deleted: bool = False
 
     @field_validator("values")

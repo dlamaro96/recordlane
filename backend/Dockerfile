@@ -8,11 +8,12 @@ RUN apk upgrade --no-cache
 RUN addgroup -S -g 10001 recordlane && adduser -S -D -H -u 10001 -G recordlane recordlane
 WORKDIR /app
 COPY pyproject.toml README.md ./
-COPY src ./src
-RUN pip install --no-deps . && pip install \
+RUN pip install \
     fastapi==0.141.1 uvicorn==0.35.0 pydantic==2.13.5 pydantic-settings==2.11.0 \
     SQLAlchemy==2.0.52 'psycopg[binary]==3.3.5' PyYAML==6.0.3 httpx==0.28.1 \
     python-multipart==0.0.31 cryptography==50.0.0 'PyJWT[crypto]==2.13.0'
+COPY src ./src
+RUN pip install --no-deps .
 USER 10001:10001
 EXPOSE 8000
 HEALTHCHECK --interval=20s --timeout=3s --retries=5 CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live')"]

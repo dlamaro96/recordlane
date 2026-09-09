@@ -12,5 +12,14 @@ spec:
     - {key: active, type: boolean, required: true}
   relationships:
     - {type: component_of, target: Product, cardinality: many-to-many, effectiveDated: true}
-  validation:
-    - {attribute: sku, uniqueWithin: tenant}
+  matching:
+    blocking:
+      - {fields: [sku]}
+      - {fields: [category], prefix: {field: name, length: 6}}
+    comparisons:
+      - {field: sku, comparator: exact, weight: 0.75}
+      - {field: name, comparator: sequence_ratio, weight: 0.25}
+    thresholds: {review: 0.65, auto_link: 0.88}
+    hard_conflicts: [sku]
+  survivorship:
+    default: source_priority_then_observation_time

@@ -1,23 +1,22 @@
 # SPDX-License-Identifier: Apache-2.0
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from recordlane.api.routes import router
-from recordlane.database import Base, SessionLocal, engine
+from recordlane.database import SessionLocal, engine
 from recordlane.demo import seed_demo
+from recordlane.operations.migrate import schema_is_current
 from recordlane.settings import get_settings
-
 
 settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    Base.metadata.create_all(engine)
     if settings.demo_mode:
         with SessionLocal() as db:
             seed_demo(db)
@@ -39,7 +38,15 @@ app.add_middleware(
     allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allow_headers=["Authorization", "Content-Type", "Idempotency-Key", "If-Match", "X-Recordlane-User", "X-Recordlane-Role", "X-Recordlane-Workspace"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "Idempotency-Key",
+        "If-Match",
+        "X-Recordlane-User",
+        "X-Recordlane-Role",
+        "X-Recordlane-Workspace",
+    ],
 )
 app.include_router(router)
 
@@ -50,12 +57,17 @@ async def correlation_id(request: Request, call_next):
     if declared_size:
         try:
             if int(declared_size) > settings.max_request_bytes:
-                return JSONResponse(status_code=413, content={"detail": {"code": "request_too_large"}})
+                return JSONResponse(
+                    status_code=413, content={"detail": {"code": "request_too_large"}}
+                )
         except ValueError:
-            return JSONResponse(status_code=400, content={"detail": {"code": "invalid_content_length"}})
+            return JSONResponse(
+                status_code=400, content={"detail": {"code": "invalid_content_length"}}
+            )
     correlation = request.headers.get("x-correlation-id")
     if not correlation or len(correlation) > 128:
         from uuid import uuid4
+
         correlation = str(uuid4())
     response = await call_next(request)
     response.headers["X-Correlation-ID"] = correlation
@@ -67,7 +79,10 @@ async def correlation_id(request: Request, call_next):
 
 @app.exception_handler(Exception)
 async def unexpected(_: Request, exc: Exception):
-    return JSONResponse(status_code=500, content={"detail": {"code": "internal_error", "message": "Unexpected server error"}})
+    return JSONResponse(
+        status_code=500,
+        content={"detail": {"code": "internal_error", "message": "Unexpected server error"}},
+    )
 
 
 @app.get("/health/live", include_in_schema=False)
@@ -79,4 +94,6 @@ def live() -> dict:
 def ready() -> dict:
     with engine.connect() as connection:
         connection.exec_driver_sql("SELECT 1")
+        if not schema_is_current(connection):
+            raise HTTPException(503, detail={"code": "schema_migration_required"})
     return {"status": "ready"}

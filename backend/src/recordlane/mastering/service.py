@@ -14,22 +14,38 @@ from recordlane.auth.principal import Principal
 from recordlane.matching import compare
 from recordlane.models.tables import (
     AuditEntry,
+    CandidateBlock,
     CannotLink,
     ConfigurationVersion,
     Domain,
+    DurableJob,
     Entity,
+    MembershipHistory,
     MasterVersion,
     OutboxEvent,
     Relationship,
     ReviewTask,
     Simulation,
     Source,
+    SourceObject,
+    SourceObjectCannotLink,
+    SourceObservationMeta,
     SourceRecord,
     Workspace,
     now,
 )
 from recordlane.quality import normalize_record, validate_record
+from recordlane.policy import CompiledPolicy, PolicyError, compile_policy
 from recordlane.schemas import IncomingRecord
+
+
+ALLOWED_TASK_DECISIONS = {
+    "duplicate_match": {"link", "keep_separate", "reject"},
+    "master_approval": {"approve", "reject"},
+    "configuration_approval": {"approve", "reject"},
+    "merge_approval": {"approve", "reject"},
+    "split_approval": {"approve", "reject"},
+}
 
 
 def canonical_hash(value: Any) -> str:
@@ -79,6 +95,11 @@ class MasteringService:
     def create_domain(self, key: str, name: str, mode: str, definition: dict) -> Domain:
         if self.db.scalar(select(Domain).where(Domain.workspace_id == self.wid, Domain.key == key)):
             raise HTTPException(409, detail={"code": "domain_key_exists"})
+        try:
+            policy = compile_policy(definition | {"mode": mode})
+        except PolicyError as exc:
+            raise HTTPException(422, detail={"code": "invalid_domain_policy", "message": str(exc)}) from exc
+        definition = policy.canonical_document()
         domain = Domain(workspace_id=self.wid, key=key, name=name, mode=mode, definition=definition)
         self.db.add(domain)
         self.db.flush()
@@ -91,8 +112,31 @@ class MasteringService:
         domain = self.db.scalar(select(Domain).where(Domain.workspace_id == self.wid, Domain.key == domain_key))
         if not source or not domain:
             raise HTTPException(404, detail={"code": "source_or_domain_not_found"})
-        counts = {"accepted": 0, "duplicate": 0, "quarantined": 0, "linked": 0, "review": 0, "created": 0}
+        try:
+            policy = compile_policy(domain.definition)
+        except PolicyError as exc:
+            raise HTTPException(422, detail={"code": "invalid_domain_policy", "message": str(exc)}) from exc
+        counts = {
+            "accepted": 0,
+            "duplicate": 0,
+            "quarantined": 0,
+            "out_of_order": 0,
+            "updated": 0,
+            "retired": 0,
+            "linked": 0,
+            "review": 0,
+            "created": 0,
+        }
         for item in records:
+            source_object = self._get_or_create_source_object(source, domain_key, item.local_id)
+            payload_hash = canonical_hash({
+                "values": item.values,
+                "verification": item.verification,
+                "effective_from": item.effective_from,
+                "sequence": item.sequence,
+                "update_mode": item.update_mode,
+                "deleted": item.deleted,
+            })
             duplicate = self.db.scalar(select(SourceRecord).where(
                 SourceRecord.workspace_id == self.wid,
                 SourceRecord.source_id == source.id,
@@ -101,36 +145,101 @@ class MasteringService:
                 SourceRecord.source_version == item.version,
             ))
             if duplicate:
+                meta = self.db.get(SourceObservationMeta, duplicate.id)
+                same_legacy_payload = (
+                    meta is None
+                    and item.update_mode == "full"
+                    and duplicate.original == item.values
+                    and duplicate.verification == item.verification
+                    and duplicate.effective_from == item.effective_from
+                    and (duplicate.state == "deleted") == item.deleted
+                )
+                if (meta and meta.payload_hash != payload_hash) or (not meta and not same_legacy_payload):
+                    raise HTTPException(409, detail={
+                        "code": "source_version_conflict",
+                        "local_id": item.local_id,
+                        "version": item.version,
+                    })
                 counts["duplicate"] += 1
                 continue
-            normalized = normalize_record(item.values)
-            quality_errors = validate_record(item.values, domain.definition)
-            name = str(normalized.get("name", ""))
-            country = str(normalized.get("country", ""))
-            block = f"{name[:5]}|{country}"
+            current = self.db.get(SourceRecord, source_object.current_record_id) if source_object.current_record_id else None
+            values = dict(current.original) if item.update_mode == "partial" and current else {}
+            values.update(item.values)
+            normalized = normalize_record(values, policy)
+            quality_errors = [] if item.deleted else policy.validate(values)
+            block_keys = policy.blocking_keys(normalized)
+            block = block_keys[0] if block_keys else ""
+            is_current = self._observation_is_current(source_object, item)
+            state = "deleted" if item.deleted else ("quarantine" if quality_errors else ("valid" if is_current else "superseded"))
             record = SourceRecord(
                 workspace_id=self.wid,
                 source_id=source.id,
                 domain_key=domain_key,
                 local_id=item.local_id,
                 source_version=item.version,
-                original=item.values,
+                original=values,
                 normalized=normalized,
                 blocking_key=block,
                 verification=item.verification,
-                state="deleted" if item.deleted else ("quarantine" if quality_errors else "valid"),
+                state=state,
                 quality_errors=quality_errors,
                 effective_from=item.effective_from,
             )
             self.db.add(record)
             self.db.flush()
+            self.db.add(SourceObservationMeta(
+                record_id=record.id,
+                source_object_id=source_object.id,
+                payload_hash=payload_hash,
+                source_sequence=item.sequence,
+                update_mode=item.update_mode,
+            ))
+            for block_key in block_keys:
+                self.db.add(CandidateBlock(
+                    workspace_id=self.wid,
+                    domain_key=domain_key,
+                    source_object_id=source_object.id,
+                    record_id=record.id,
+                    block_key=block_key,
+                ))
+            source_object.latest_record_id = record.id
             if quality_errors:
                 counts["quarantined"] += 1
                 counts["accepted"] += 1
                 continue
-            entity, outcome = self._resolve(record)
-            record.entity_id = entity.id
-            counts[outcome] += 1
+            if not is_current:
+                record.entity_id = source_object.entity_id
+                counts["out_of_order"] += 1
+                counts["accepted"] += 1
+                continue
+            source_object.current_sequence = item.sequence
+            source_object.current_effective_from = item.effective_from
+            if item.deleted:
+                record.entity_id = source_object.entity_id
+                source_object.current_record_id = None
+                source_object.retired = True
+                counts["retired"] += 1
+                counts["accepted"] += 1
+                if source_object.entity_id:
+                    entity = self.db.get(Entity, source_object.entity_id)
+                    if entity:
+                        entity.version += 1
+                        self._draft_master(entity)
+                continue
+            source_object.current_record_id = record.id
+            source_object.retired = False
+            if source_object.entity_id:
+                entity = self.db.get(Entity, source_object.entity_id)
+                if not entity:
+                    raise HTTPException(409, detail={"code": "source_membership_entity_missing"})
+                record.entity_id = entity.id
+                entity.version += 1
+                counts["updated"] += 1
+            else:
+                entity, outcome = self._resolve(record, source_object, policy, block_keys)
+                self._set_membership(source_object, entity, "initial_resolution")
+                record.entity_id = entity.id
+                counts[outcome] += 1
             counts["accepted"] += 1
             self._draft_master(entity)
         source.last_ingested_at = now()
@@ -139,33 +248,128 @@ class MasteringService:
         self.db.commit()
         return counts | {"source": source.key, "checkpoint": source.checkpoint}
 
-    def _resolve(self, record: SourceRecord) -> tuple[Entity, str]:
-        candidates = self.db.scalars(select(SourceRecord).where(
+    def _get_or_create_source_object(self, source: Source, domain_key: str, local_id: str) -> SourceObject:
+        source_object = self.db.scalar(select(SourceObject).where(
+            SourceObject.workspace_id == self.wid,
+            SourceObject.source_id == source.id,
+            SourceObject.domain_key == domain_key,
+            SourceObject.local_id == local_id,
+        ))
+        if source_object:
+            return source_object
+        legacy = self.db.scalar(select(SourceRecord).where(
+            SourceRecord.workspace_id == self.wid,
+            SourceRecord.source_id == source.id,
+            SourceRecord.domain_key == domain_key,
+            SourceRecord.local_id == local_id,
+        ).order_by(SourceRecord.observed_at.desc(), SourceRecord.id.desc()))
+        source_object = SourceObject(
+            workspace_id=self.wid,
+            source_id=source.id,
+            domain_key=domain_key,
+            local_id=local_id,
+            entity_id=legacy.entity_id if legacy else None,
+            current_record_id=legacy.id if legacy and legacy.state == "valid" else None,
+            latest_record_id=legacy.id if legacy else None,
+            retired=bool(legacy and legacy.state == "deleted"),
+        )
+        self.db.add(source_object)
+        self.db.flush()
+        if source_object.entity_id:
+            self.db.add(MembershipHistory(
+                workspace_id=self.wid,
+                source_object_id=source_object.id,
+                entity_id=source_object.entity_id,
+                reason="legacy_backfill",
+                changed_by="recordlane-migration",
+            ))
+        return source_object
+
+    def _observation_is_current(self, source_object: SourceObject, item: IncomingRecord) -> bool:
+        if item.sequence is not None and source_object.current_sequence is not None:
+            return item.sequence > source_object.current_sequence
+        if item.sequence is not None:
+            return True
+        if item.effective_from is not None and source_object.current_effective_from is not None:
+            return item.effective_from > source_object.current_effective_from
+        return True
+
+    def _set_membership(self, source_object: SourceObject, entity: Entity, reason: str) -> None:
+        if source_object.entity_id == entity.id:
+            return
+        previous = self.db.scalar(select(MembershipHistory).where(
+            MembershipHistory.workspace_id == self.wid,
+            MembershipHistory.source_object_id == source_object.id,
+            MembershipHistory.valid_to.is_(None),
+        ).order_by(MembershipHistory.valid_from.desc()))
+        if previous:
+            previous.valid_to = now()
+        source_object.entity_id = entity.id
+        self.db.add(MembershipHistory(
+            workspace_id=self.wid,
+            source_object_id=source_object.id,
+            entity_id=entity.id,
+            reason=reason,
+            changed_by=self.principal.subject,
+        ))
+
+    def _current_records(self, entity_id: str | None = None) -> list[SourceRecord]:
+        query = select(SourceRecord).join(SourceObject, SourceObject.current_record_id == SourceRecord.id).where(
+            SourceRecord.workspace_id == self.wid,
+            SourceRecord.state == "valid",
+            SourceObject.retired.is_(False),
+        )
+        if entity_id:
+            query = query.where(SourceObject.entity_id == entity_id)
+        return list(self.db.scalars(query).all())
+
+    def _resolve(
+        self,
+        record: SourceRecord,
+        source_object: SourceObject,
+        policy: CompiledPolicy,
+        block_keys: list[str],
+    ) -> tuple[Entity, str]:
+        if not block_keys:
+            rows = []
+        else:
+            rows = self.db.execute(select(SourceRecord, SourceObject).join(
+            SourceObject, SourceObject.current_record_id == SourceRecord.id,
+        ).join(
+            CandidateBlock, CandidateBlock.record_id == SourceRecord.id,
+        ).where(
             SourceRecord.workspace_id == self.wid,
             SourceRecord.domain_key == record.domain_key,
-            SourceRecord.blocking_key == record.blocking_key,
             SourceRecord.id != record.id,
-            SourceRecord.entity_id.is_not(None),
             SourceRecord.state == "valid",
-        ).limit(200)).all()
-        best: tuple[float, SourceRecord, dict] | None = None
-        for candidate in candidates:
-            pair = compare(record.normalized, candidate.normalized)
-            if self._is_cannot_link(record.id, candidate.id):
+            SourceObject.entity_id.is_not(None),
+            SourceObject.retired.is_(False),
+            CandidateBlock.block_key.in_(block_keys),
+        ).limit(201)).all()
+            if len(rows) > 200:
+                raise HTTPException(409, detail={
+                    "code": "candidate_block_overflow",
+                    "limit": 200,
+                    "message": "Refine the policy blocking strategies; candidates were not silently truncated",
+                })
+        best: tuple[float, SourceRecord, SourceObject, dict] | None = None
+        seen_objects: set[str] = set()
+        for candidate, candidate_object in rows:
+            if candidate_object.id in seen_objects:
                 continue
-            if pair.decision in {"auto_link", "review"} and candidate.entity_id:
-                members = self.db.scalars(select(SourceRecord).where(
-                    SourceRecord.workspace_id == self.wid,
-                    SourceRecord.entity_id == candidate.entity_id,
-                    SourceRecord.state == "valid",
-                )).all()
-                cluster_conflict = any(compare(record.normalized, member.normalized).contradictions for member in members)
+            seen_objects.add(candidate_object.id)
+            pair = compare(record.normalized, candidate.normalized, policy)
+            if self._is_cannot_link(source_object.id, candidate_object.id):
+                continue
+            if pair.decision in {"auto_link", "review"} and candidate_object.entity_id:
+                members = self._current_records(candidate_object.entity_id)
+                cluster_conflict = any(compare(record.normalized, member.normalized, policy).contradictions for member in members)
                 if cluster_conflict:
                     continue
                 if best is None or pair.score > best[0]:
-                    best = (pair.score, candidate, pair.as_dict())
-        if best and best[2]["decision"] == "auto_link":
-            entity = self.db.get(Entity, best[1].entity_id)
+                    best = (pair.score, candidate, candidate_object, pair.as_dict())
+        if best and best[3]["decision"] == "auto_link":
+            entity = self.db.get(Entity, best[2].entity_id)
             if entity:
                 entity.version += 1
                 return entity, "linked"
@@ -178,7 +382,15 @@ class MasteringService:
                 kind="duplicate_match",
                 entity_id=entity.id,
                 proposed_by="matching-engine",
-                payload={"left_record_id": record.id, "right_record_id": best[1].id, "target_entity_id": best[1].entity_id, **best[2]},
+                payload={
+                    "left_record_id": record.id,
+                    "right_record_id": best[1].id,
+                    "left_source_object_id": source_object.id,
+                    "right_source_object_id": best[2].id,
+                    "target_entity_id": best[2].entity_id,
+                    "bound_target_entity_version": self.db.get(Entity, best[2].entity_id).version,
+                    **best[3],
+                },
                 bound_entity_version=entity.version,
             )
             self.db.add(task)
@@ -187,45 +399,21 @@ class MasteringService:
 
     def _is_cannot_link(self, left: str, right: str) -> bool:
         a, b = sorted((left, right))
-        return self.db.scalar(select(CannotLink).where(
-            CannotLink.workspace_id == self.wid,
-            CannotLink.left_record_id == a,
-            CannotLink.right_record_id == b,
+        return self.db.scalar(select(SourceObjectCannotLink).where(
+            SourceObjectCannotLink.workspace_id == self.wid,
+            SourceObjectCannotLink.left_object_id == a,
+            SourceObjectCannotLink.right_object_id == b,
         )) is not None
 
     def _draft_master(self, entity: Entity) -> MasterVersion:
-        records = self.db.scalars(select(SourceRecord).where(
-            SourceRecord.workspace_id == self.wid,
-            SourceRecord.entity_id == entity.id,
-            SourceRecord.state == "valid",
-        )).all()
-        source_ids = {r.source_id for r in records}
-        sources = {s.id: s for s in self.db.scalars(select(Source).where(Source.id.in_(source_ids))).all()} if source_ids else {}
-        fields = sorted({key for record in records for key in record.original})
-        values, provenance = {}, {}
-        for field in fields:
-            options = []
-            for record in records:
-                if field not in record.original or record.original[field] is None:
-                    continue
-                source = sources[record.source_id]
-                verified = bool(record.verification.get(field))
-                options.append((1 if verified else 0, -source.priority, record.observed_at, record, source))
-            if not options:
-                continue
-            _, _, _, winner, source = max(options, key=lambda item: (item[0], item[1], item[2], item[3].id))
-            values[field] = winner.original[field]
-            provenance[field] = {
-                "source": source.name,
-                "source_key": source.key,
-                "source_record_id": winner.id,
-                "source_version": winner.source_version,
-                "verification": "verified" if winner.verification.get(field) else "unverified",
-                "rule": "verified_then_source_priority_then_observation_time",
-                "rule_version": "1",
-                "observed_at": winner.observed_at.isoformat(),
-                "alternatives": len(options) - 1,
-            }
+        domain = self.db.scalar(select(Domain).where(
+            Domain.workspace_id == self.wid,
+            Domain.key == entity.domain_key,
+        ))
+        if not domain:
+            raise HTTPException(409, detail={"code": "entity_domain_missing"})
+        policy = compile_policy(domain.definition)
+        values, provenance = self._master_values(entity, policy)
         latest = self.db.scalar(select(func.max(MasterVersion.version)).where(MasterVersion.entity_id == entity.id)) or 0
         draft = MasterVersion(workspace_id=self.wid, entity_id=entity.id, version=latest + 1, status="draft", values=values, provenance=provenance)
         self.db.add(draft)
@@ -252,12 +440,67 @@ class MasteringService:
         ))
         return draft
 
+    def _master_values(self, entity: Entity, policy: CompiledPolicy) -> tuple[dict, dict]:
+        records = self._current_records(entity.id)
+        source_ids = {r.source_id for r in records}
+        sources = {s.id: s for s in self.db.scalars(select(Source).where(Source.id.in_(source_ids))).all()} if source_ids else {}
+        fields = sorted({key for record in records for key in record.original})
+        values, provenance = {}, {}
+        for field in fields:
+            options = []
+            configured_rule = policy.document.get("survivorship", {}).get(
+                field,
+                policy.document["survivorship"].get(
+                    "default", "source_priority_then_observation_time"
+                ),
+            )
+            rule_name = (
+                configured_rule.get("strategy", "source_priority_then_observation_time")
+                if isinstance(configured_rule, dict)
+                else configured_rule
+            )
+            for record in records:
+                if field not in record.original or record.original[field] is None:
+                    continue
+                source = sources[record.source_id]
+                verified = bool(record.verification.get(field))
+                field_rule = policy.document.get("survivorship", {}).get(field, {})
+                if isinstance(field_rule, str):
+                    field_rule = {"strategy": field_rule}
+                precedence = field_rule.get("source_precedence", [])
+                precedence_rank = -precedence.index(source.key) if source.key in precedence else -len(precedence) - source.priority
+                verified_rank = 1 if verified and field_rule.get("strategy", policy.document["survivorship"].get("default", "")).startswith("verified") else 0
+                options.append((verified_rank, precedence_rank, record.observed_at, record, source))
+            if not options:
+                continue
+            _, _, _, winner, source = max(options, key=lambda item: (item[0], item[1], item[2], item[3].id))
+            values[field] = winner.original[field]
+            provenance[field] = {
+                "source": source.name,
+                "source_key": source.key,
+                "source_record_id": winner.id,
+                "source_version": winner.source_version,
+                "verification": "verified" if winner.verification.get(field) else "unverified",
+                "rule": rule_name,
+                "rule_version": f"policy:{policy.version}:{policy.checksum[:12]}",
+                "observed_at": winner.observed_at.isoformat(),
+                "alternatives": len(options) - 1,
+            }
+        return values, provenance
+
     def decide_task(self, task_id: str, decision: str, reason: str) -> ReviewTask:
         task = self.db.scalar(select(ReviewTask).where(ReviewTask.id == task_id, ReviewTask.workspace_id == self.wid))
         if not task:
             raise HTTPException(404, detail={"code": "task_not_found"})
         if task.status != "open":
             raise HTTPException(409, detail={"code": "task_not_open", "status": task.status})
+        if decision not in ALLOWED_TASK_DECISIONS.get(task.kind, set()):
+            raise HTTPException(409, detail={
+                "code": "invalid_task_decision",
+                "task_kind": task.kind,
+                "decision": decision,
+                "allowed": sorted(ALLOWED_TASK_DECISIONS.get(task.kind, set())),
+            })
         if task.entity_id:
             entity = self.db.get(Entity, task.entity_id)
             if entity and task.bound_entity_version != entity.version:
@@ -269,8 +512,18 @@ class MasteringService:
         if task.kind == "duplicate_match" and decision == "link":
             self._link_match(task, reason)
         elif task.kind == "duplicate_match" and decision in {"keep_separate", "reject"}:
-            left, right = sorted((task.payload["left_record_id"], task.payload["right_record_id"]))
-            self.db.add(CannotLink(workspace_id=self.wid, left_record_id=left, right_record_id=right, reason=reason, created_by=self.principal.subject))
+            if task.payload.get("left_source_object_id") and task.payload.get("right_source_object_id"):
+                left, right = sorted((task.payload["left_source_object_id"], task.payload["right_source_object_id"]))
+                self.db.add(SourceObjectCannotLink(
+                    workspace_id=self.wid,
+                    left_object_id=left,
+                    right_object_id=right,
+                    reason=reason,
+                    created_by=self.principal.subject,
+                ))
+            else:
+                left, right = sorted((task.payload["left_record_id"], task.payload["right_record_id"]))
+                self.db.add(CannotLink(workspace_id=self.wid, left_record_id=left, right_record_id=right, reason=reason, created_by=self.principal.subject))
         elif task.kind == "master_approval" and decision == "approve":
             draft = self.db.scalar(select(MasterVersion).where(
                 MasterVersion.entity_id == task.entity_id,
@@ -305,12 +558,17 @@ class MasteringService:
                 Simulation.config_id == task.payload["config_id"],
             ))
             checkpoint = self.db.scalar(select(func.count(SourceRecord.id)).where(SourceRecord.workspace_id == self.wid)) or 0
+            current_hash = self._snapshot_hash()
             if not config or not simulation or config.checksum != task.payload["checksum"]:
                 raise HTTPException(409, detail={"code": "configuration_changed"})
-            if checkpoint != simulation.data_checkpoint:
+            if current_hash != simulation.result.get("snapshot_hash"):
                 task.status = "stale"
                 self.db.commit()
-                raise HTTPException(409, detail={"code": "stale_simulation", "current_checkpoint": checkpoint})
+                raise HTTPException(409, detail={
+                    "code": "stale_simulation",
+                    "current_checkpoint": checkpoint,
+                    "current_snapshot_hash": current_hash,
+                })
             active = self.db.scalars(select(ConfigurationVersion).where(
                 ConfigurationVersion.workspace_id == self.wid,
                 ConfigurationVersion.status == "active",
@@ -318,11 +576,35 @@ class MasteringService:
             for previous in active:
                 previous.status = "retired"
             config.status = "active"
+            policies = self._configuration_policies(config.document)
+            jobs: list[str] = []
+            for domain_key, policy in policies.items():
+                domain = self.db.scalar(select(Domain).where(
+                    Domain.workspace_id == self.wid,
+                    Domain.key == domain_key,
+                ))
+                if not domain:
+                    raise HTTPException(409, detail={"code": "configuration_domain_missing"})
+                domain.definition = policy.canonical_document()
+                domain.schema_version += 1
+                job = DurableJob(
+                    workspace_id=self.wid,
+                    kind="remaster_domain",
+                    payload={
+                        "domain_key": domain.key,
+                        "policy_checksum": policy.checksum,
+                        "configuration_id": config.id,
+                    },
+                )
+                self.db.add(job)
+                self.db.flush()
+                jobs.append(job.id)
             self.audit("configuration.activated", "configuration", config.id, {
                 "version": config.version,
                 "checksum": config.checksum,
                 "simulation_id": simulation.id,
                 "data_checkpoint": checkpoint,
+                "remaster_jobs": jobs,
             })
         elif task.kind == "merge_approval" and decision == "approve":
             self._apply_merge(task, reason)
@@ -343,16 +625,27 @@ class MasteringService:
         )).all()
         if len(entities) != len(set(entity_ids)):
             raise HTTPException(404, detail={"code": "entity_not_found"})
+        if len({entity.domain_key for entity in entities}) != 1:
+            raise HTTPException(409, detail={"code": "cross_domain_merge_forbidden"})
         primary = next(entity for entity in entities if entity.id == entity_ids[0])
-        contributions = self.db.scalar(select(func.count(SourceRecord.id)).where(
-            SourceRecord.workspace_id == self.wid,
-            SourceRecord.entity_id.in_(entity_ids),
+        contributions = self.db.scalar(select(func.count(SourceObject.id)).where(
+            SourceObject.workspace_id == self.wid,
+            SourceObject.entity_id.in_(entity_ids),
+            SourceObject.retired.is_(False),
         )) or 0
         relationships = self.db.scalar(select(func.count(Relationship.id)).where(
             Relationship.workspace_id == self.wid,
             (Relationship.from_entity_id.in_(entity_ids)) | (Relationship.to_entity_id.in_(entity_ids)),
         )) or 0
-        impact = {"primary_entity_id": entity_ids[0], "merged_entity_ids": entity_ids[1:], "source_contributions": contributions, "relationships": relationships, "consumer_corrections": len(entity_ids) - 1, "dry_run": dry_run}
+        impact = {
+            "primary_entity_id": entity_ids[0],
+            "merged_entity_ids": entity_ids[1:],
+            "bound_entity_versions": {entity.id: entity.version for entity in entities},
+            "source_contributions": contributions,
+            "relationships": relationships,
+            "consumer_corrections": len(entity_ids) - 1,
+            "dry_run": dry_run,
+        }
         if dry_run:
             return impact
         task = ReviewTask(
@@ -363,6 +656,7 @@ class MasteringService:
             payload=impact | {"reason": reason},
             bound_entity_version=primary.version,
             priority="high",
+            sensitive=True,
         )
         self.db.add(task)
         self.db.flush()
@@ -374,10 +668,10 @@ class MasteringService:
         entity = self.db.scalar(select(Entity).where(Entity.id == entity_id, Entity.workspace_id == self.wid, Entity.status != "merged"))
         if not entity:
             raise HTTPException(404, detail={"code": "entity_not_found"})
-        members = self.db.scalars(select(SourceRecord).where(
-            SourceRecord.workspace_id == self.wid,
-            SourceRecord.entity_id == entity.id,
-            SourceRecord.id.in_(source_record_ids),
+        members = self.db.scalars(select(SourceObject).where(
+            SourceObject.workspace_id == self.wid,
+            SourceObject.entity_id == entity.id,
+            SourceObject.current_record_id.in_(source_record_ids),
         )).all()
         if len(members) != len(set(source_record_ids)):
             raise HTTPException(409, detail={"code": "source_record_not_in_entity"})
@@ -386,9 +680,15 @@ class MasteringService:
             kind="split_approval",
             entity_id=entity.id,
             proposed_by=self.principal.subject,
-            payload={"source_record_ids": source_record_ids, "reason": reason, "downstream_repair_required": True},
+            payload={
+                "source_record_ids": source_record_ids,
+                "source_object_ids": [member.id for member in members],
+                "reason": reason,
+                "downstream_repair_required": True,
+            },
             bound_entity_version=entity.version,
             priority="high",
+            sensitive=True,
         )
         self.db.add(task)
         self.db.flush()
@@ -401,12 +701,15 @@ class MasteringService:
         merged_ids = task.payload["merged_entity_ids"]
         if not primary:
             raise HTTPException(409, detail={"code": "primary_entity_missing"})
+        bound_versions = task.payload.get("bound_entity_versions", {})
+        if bound_versions.get(primary.id) != primary.version:
+            raise HTTPException(409, detail={"code": "merge_entity_changed", "entity_id": primary.id})
         for entity_id in merged_ids:
             merged = self.db.scalar(select(Entity).where(Entity.id == entity_id, Entity.workspace_id == self.wid, Entity.status != "merged"))
-            if not merged:
+            if not merged or bound_versions.get(entity_id) != merged.version:
                 raise HTTPException(409, detail={"code": "merge_entity_changed", "entity_id": entity_id})
-            for member in self.db.scalars(select(SourceRecord).where(SourceRecord.workspace_id == self.wid, SourceRecord.entity_id == merged.id)).all():
-                member.entity_id = primary.id
+            for member in self.db.scalars(select(SourceObject).where(SourceObject.workspace_id == self.wid, SourceObject.entity_id == merged.id)).all():
+                self._set_membership(member, primary, "approved_merge")
             for rel in self.db.scalars(select(Relationship).where(Relationship.workspace_id == self.wid, Relationship.from_entity_id == merged.id)).all():
                 rel.from_entity_id = primary.id
             for rel in self.db.scalars(select(Relationship).where(Relationship.workspace_id == self.wid, Relationship.to_entity_id == merged.id)).all():
@@ -426,13 +729,15 @@ class MasteringService:
         split = Entity(workspace_id=self.wid, domain_key=original.domain_key, stable_key=f"rl_{canonical_hash([self.wid, task.id, 'split'])[:20]}")
         self.db.add(split)
         self.db.flush()
-        members = self.db.scalars(select(SourceRecord).where(
-            SourceRecord.workspace_id == self.wid,
-            SourceRecord.entity_id == original.id,
-            SourceRecord.id.in_(task.payload["source_record_ids"]),
+        members = self.db.scalars(select(SourceObject).where(
+            SourceObject.workspace_id == self.wid,
+            SourceObject.entity_id == original.id,
+            SourceObject.id.in_(task.payload.get("source_object_ids", [])),
         )).all()
+        if len(members) != len(task.payload.get("source_object_ids", [])):
+            raise HTTPException(409, detail={"code": "split_membership_changed"})
         for member in members:
-            member.entity_id = split.id
+            self._set_membership(member, split, "approved_split")
         original.version += 1
         self._draft_master(original)
         new_draft = self._draft_master(split)
@@ -447,9 +752,29 @@ class MasteringService:
         target_entity = self.db.get(Entity, task.payload["target_entity_id"])
         if not source_entity or not target_entity:
             raise HTTPException(409, detail={"code": "entity_unavailable"})
-        members = self.db.scalars(select(SourceRecord).where(SourceRecord.entity_id == source_entity.id, SourceRecord.workspace_id == self.wid)).all()
+        if source_entity.domain_key != target_entity.domain_key:
+            raise HTTPException(409, detail={"code": "cross_domain_merge_forbidden"})
+        if target_entity.version != task.payload.get("bound_target_entity_version"):
+            raise HTTPException(409, detail={"code": "stale_target_entity"})
+        if self._is_cannot_link(
+            task.payload["left_source_object_id"],
+            task.payload["right_source_object_id"],
+        ):
+            raise HTTPException(409, detail={"code": "cannot_link_constraint"})
+        left = self.db.get(SourceRecord, task.payload["left_record_id"])
+        right = self.db.get(SourceRecord, task.payload["right_record_id"])
+        domain = self.db.scalar(select(Domain).where(
+            Domain.workspace_id == self.wid,
+            Domain.key == source_entity.domain_key,
+        ))
+        if not left or not right or not domain:
+            raise HTTPException(409, detail={"code": "match_evidence_unavailable"})
+        evidence = compare(left.normalized, right.normalized, compile_policy(domain.definition))
+        if evidence.contradictions:
+            raise HTTPException(409, detail={"code": "match_contradiction", "evidence": evidence.as_dict()})
+        members = self.db.scalars(select(SourceObject).where(SourceObject.entity_id == source_entity.id, SourceObject.workspace_id == self.wid)).all()
         for member in members:
-            member.entity_id = target_entity.id
+            self._set_membership(member, target_entity, "approved_match")
         source_entity.status = "merged"
         target_entity.version += 1
         self._draft_master(target_entity)
@@ -459,6 +784,10 @@ class MasteringService:
             for value in _walk_values(document):
                 if isinstance(value, str) and value.startswith(("sk-", "ghp_", "Bearer ")):
                     raise HTTPException(422, detail={"code": "secret_value_forbidden"})
+        try:
+            self._configuration_policies(document)
+        except PolicyError as exc:
+            raise HTTPException(422, detail={"code": "invalid_configuration", "message": str(exc)}) from exc
         version = (self.db.scalar(select(func.max(ConfigurationVersion.version)).where(ConfigurationVersion.workspace_id == self.wid)) or 0) + 1
         config = ConfigurationVersion(workspace_id=self.wid, version=version, status="draft", checksum=canonical_hash(document), document=document, created_by=self.principal.subject)
         self.db.add(config)
@@ -467,17 +796,157 @@ class MasteringService:
         self.db.commit()
         return config
 
+    def _configuration_policies(self, document: dict) -> dict[str, CompiledPolicy]:
+        domains = self.db.scalars(select(Domain).where(Domain.workspace_id == self.wid)).all()
+        by_key = {domain.key: domain for domain in domains}
+        if document.get("kind") == "DomainPack":
+            key = str(document.get("metadata", {}).get("name", ""))
+            if key not in by_key:
+                raise PolicyError(f"configuration domain does not exist: {key}")
+            return {key: compile_policy(document)}
+        if isinstance(document.get("domains"), dict):
+            unknown = set(document["domains"]) - set(by_key)
+            if unknown:
+                raise PolicyError(f"configuration domains do not exist: {', '.join(sorted(unknown))}")
+            return {key: compile_policy(value) for key, value in document["domains"].items()}
+
+        # Compatibility adapter for the original preview configuration shape.
+        supplier = by_key.get("supplier")
+        matching = document.get("matching", {}).get("supplier")
+        if supplier and isinstance(matching, dict):
+            candidate = json.loads(json.dumps(supplier.definition))
+            thresholds = candidate.setdefault("matching", {}).setdefault("thresholds", {})
+            if "review_threshold" in matching:
+                thresholds["review"] = matching["review_threshold"]
+            if "auto_link_threshold" in matching:
+                thresholds["auto_link"] = matching["auto_link_threshold"]
+            if isinstance(document.get("survivorship"), dict):
+                candidate["survivorship"] = candidate.get("survivorship", {}) | document["survivorship"]
+            return {"supplier": compile_policy(candidate)}
+        raise PolicyError("configuration must contain a DomainPack or a domains mapping")
+
+    def _snapshot_hash(self) -> str:
+        objects = self.db.scalars(select(SourceObject).where(
+            SourceObject.workspace_id == self.wid,
+        ).order_by(SourceObject.id)).all()
+        entities = self.db.scalars(select(Entity).where(
+            Entity.workspace_id == self.wid,
+        ).order_by(Entity.id)).all()
+        constraints = self.db.scalars(select(SourceObjectCannotLink).where(
+            SourceObjectCannotLink.workspace_id == self.wid,
+        ).order_by(SourceObjectCannotLink.id)).all()
+        domains = self.db.scalars(select(Domain).where(
+            Domain.workspace_id == self.wid,
+        ).order_by(Domain.key)).all()
+        return canonical_hash({
+            "objects": [
+                [row.id, row.current_record_id, row.latest_record_id, row.entity_id, row.retired]
+                for row in objects
+            ],
+            "entities": [[row.id, row.version, row.status] for row in entities],
+            "constraints": [[row.left_object_id, row.right_object_id] for row in constraints],
+            "domains": [[row.key, canonical_hash(row.definition)] for row in domains],
+        })
+
+    def _simulate_policy(self, domain: Domain, proposed: CompiledPolicy) -> dict:
+        current = compile_policy(domain.definition)
+        objects = self.db.scalars(select(SourceObject).where(
+            SourceObject.workspace_id == self.wid,
+            SourceObject.domain_key == domain.key,
+            SourceObject.current_record_id.is_not(None),
+            SourceObject.retired.is_(False),
+        ).order_by(SourceObject.id)).all()
+        records = {row.id: self.db.get(SourceRecord, row.current_record_id) for row in objects}
+        link_changes: list[dict] = []
+        for index, left in enumerate(objects):
+            for right in objects[index + 1:]:
+                left_record, right_record = records[left.id], records[right.id]
+                current_blocks = set(current.blocking_keys(left_record.normalized)) & set(current.blocking_keys(right_record.normalized))
+                proposed_blocks = set(proposed.blocking_keys(left_record.normalized)) & set(proposed.blocking_keys(right_record.normalized))
+                if not current_blocks and not proposed_blocks:
+                    continue
+                current_result = current.compare(left_record.normalized, right_record.normalized)
+                proposed_result = proposed.compare(
+                    proposed.normalize(left_record.original),
+                    proposed.normalize(right_record.original),
+                )
+                if self._is_cannot_link(left.id, right.id):
+                    current_result["decision"] = proposed_result["decision"] = "keep_separate"
+                if current_result["decision"] != proposed_result["decision"]:
+                    link_changes.append({
+                        "left_source_object_id": left.id,
+                        "right_source_object_id": right.id,
+                        "current": current_result,
+                        "proposed": proposed_result,
+                    })
+        validation_changes: list[dict] = []
+        for source_object in objects:
+            record = records[source_object.id]
+            before = current.validate(record.original)
+            after = proposed.validate(record.original)
+            if before != after:
+                validation_changes.append({
+                    "source_object_id": source_object.id,
+                    "current": before,
+                    "proposed": after,
+                })
+        master_changes: list[dict] = []
+        entities = self.db.scalars(select(Entity).where(
+            Entity.workspace_id == self.wid,
+            Entity.domain_key == domain.key,
+            Entity.status != "merged",
+        )).all()
+        for entity in entities:
+            before, _ = self._master_values(entity, current)
+            after, after_provenance = self._master_values(entity, proposed)
+            changed = {
+                key: {"current": before.get(key), "proposed": after.get(key), "provenance": after_provenance.get(key)}
+                for key in sorted(set(before) | set(after))
+                if before.get(key) != after.get(key)
+            }
+            if changed:
+                master_changes.append({"entity_id": entity.id, "attributes": changed})
+        review_delta = sum(
+            1 if row["proposed"]["decision"] == "review" else -1
+            for row in link_changes
+            if "review" in {row["current"]["decision"], row["proposed"]["decision"]}
+        )
+        return {
+            "domain": domain.key,
+            "current_policy": current.checksum,
+            "proposed_policy": proposed.checksum,
+            "dataset_size": len(objects),
+            "link_changes": link_changes,
+            "master_changes": master_changes,
+            "validation_changes": validation_changes,
+            "review_workload_delta": review_delta,
+        }
+
     def simulate(self, config_id: str) -> Simulation:
         config = self.db.scalar(select(ConfigurationVersion).where(ConfigurationVersion.id == config_id, ConfigurationVersion.workspace_id == self.wid))
         if not config:
             raise HTTPException(404, detail={"code": "configuration_not_found"})
+        policies = self._configuration_policies(config.document)
         checkpoint = self.db.scalar(select(func.count(SourceRecord.id)).where(SourceRecord.workspace_id == self.wid)) or 0
+        details = []
+        for key, policy in policies.items():
+            domain = self.db.scalar(select(Domain).where(Domain.workspace_id == self.wid, Domain.key == key))
+            if not domain:
+                raise HTTPException(409, detail={"code": "configuration_domain_missing", "domain": key})
+            details.append(self._simulate_policy(domain, policy))
         result = {
-            "candidate_links_changed": self.db.scalar(select(func.count(ReviewTask.id)).where(ReviewTask.workspace_id == self.wid, ReviewTask.kind == "duplicate_match", ReviewTask.status == "open")) or 0,
-            "mastered_attributes_changed": len(config.document.get("survivorship", {})),
-            "validation_failures": self.db.scalar(select(func.count(SourceRecord.id)).where(SourceRecord.workspace_id == self.wid, SourceRecord.state == "quarantine")) or 0,
-            "review_workload": self.db.scalar(select(func.count(ReviewTask.id)).where(ReviewTask.workspace_id == self.wid, ReviewTask.status == "open")) or 0,
-            "affected_consumers": self.db.scalar(select(func.count(OutboxEvent.id)).where(OutboxEvent.workspace_id == self.wid, OutboxEvent.status != "delivered")) or 0,
+            "candidate_links_changed": sum(len(row["link_changes"]) for row in details),
+            "mastered_attributes_changed": sum(
+                len(item["attributes"]) for row in details for item in row["master_changes"]
+            ),
+            "validation_failures_changed": sum(len(row["validation_changes"]) for row in details),
+            "review_workload_delta": sum(row["review_workload_delta"] for row in details),
+            "affected_consumers": len({
+                item["entity_id"] for row in details for item in row["master_changes"]
+            }),
+            "snapshot_hash": self._snapshot_hash(),
+            "sample": False,
+            "details": details,
         }
         simulation = Simulation(workspace_id=self.wid, config_id=config.id, data_checkpoint=checkpoint, result=result)
         self.db.add(simulation)
@@ -486,7 +955,12 @@ class MasteringService:
 
     def simulation_view(self, simulation: Simulation) -> dict:
         current = self.db.scalar(select(func.count(SourceRecord.id)).where(SourceRecord.workspace_id == self.wid)) or 0
-        return serialize(simulation) | {"stale": current != simulation.data_checkpoint, "current_checkpoint": current}
+        current_hash = self._snapshot_hash()
+        return serialize(simulation) | {
+            "stale": current_hash != simulation.result.get("snapshot_hash"),
+            "current_checkpoint": current,
+            "current_snapshot_hash": current_hash,
+        }
 
     def propose_config(self, config_id: str, simulation_id: str) -> ReviewTask:
         config = self.db.scalar(select(ConfigurationVersion).where(
@@ -504,8 +978,13 @@ class MasteringService:
         if not simulation:
             raise HTTPException(409, detail={"code": "matching_simulation_required"})
         checkpoint = self.db.scalar(select(func.count(SourceRecord.id)).where(SourceRecord.workspace_id == self.wid)) or 0
-        if checkpoint != simulation.data_checkpoint:
-            raise HTTPException(409, detail={"code": "stale_simulation", "current_checkpoint": checkpoint})
+        current_hash = self._snapshot_hash()
+        if current_hash != simulation.result.get("snapshot_hash"):
+            raise HTTPException(409, detail={
+                "code": "stale_simulation",
+                "current_checkpoint": checkpoint,
+                "current_snapshot_hash": current_hash,
+            })
         existing = self.db.scalar(select(ReviewTask).where(
             ReviewTask.workspace_id == self.wid,
             ReviewTask.kind == "configuration_approval",

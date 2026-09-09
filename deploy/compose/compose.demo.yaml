@@ -15,6 +15,18 @@ services:
     environment: {KC_BOOTSTRAP_ADMIN_USERNAME: demo-admin, KC_BOOTSTRAP_ADMIN_PASSWORD: demo-only-change-me}
     volumes: [../../examples/demo/keycloak-realm.json:/opt/keycloak/data/import/recordlane-realm.json:ro]
     ports: ["127.0.0.1:58080:8080"]
+  migrate:
+    build: {context: ../../backend}
+    command: ["python", "-m", "recordlane.operations.migrate"]
+    environment:
+      RECORDLANE_DATABASE_URL: postgresql+psycopg://recordlane_migrator:demo-only-migrator@postgres:5432/recordlane
+      RECORDLANE_DEMO_MODE: "true"
+      RECORDLANE_DEMO_ALLOW_REVERSE_PROXY: "true"
+    depends_on: {postgres: {condition: service_healthy}}
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
   api:
     build: {context: ../../backend}
     environment:
@@ -26,7 +38,9 @@ services:
       RECORDLANE_OUTBOUND_ENABLED: "true"
       RECORDLANE_PUBLICATION_URL: http://demo-sink:8082/events
       RECORDLANE_WEBHOOK_SECRET: demo-only-signing-key
-    depends_on: {postgres: {condition: service_healthy}}
+    depends_on:
+      postgres: {condition: service_healthy}
+      migrate: {condition: service_completed_successfully}
     read_only: true
     tmpfs: [/tmp]
     security_opt: [no-new-privileges:true]
