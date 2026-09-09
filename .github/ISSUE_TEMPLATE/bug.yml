@@ -1,0 +1,17 @@
+name: Reproducible bug
+description: Report an observable product defect without secrets or personal data.
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes: {value: "Security issue? Stop and use private vulnerability reporting."}
+  - type: input
+    id: version
+    attributes: {label: Recordlane version and deployment profile}
+    validations: {required: true}
+  - type: textarea
+    id: reproduce
+    attributes: {label: Minimal reproduction, description: Include commands, synthetic inputs, actual result, and expected result.}
+    validations: {required: true}
+  - type: textarea
+    id: evidence
+    attributes: {label: Sanitized evidence}

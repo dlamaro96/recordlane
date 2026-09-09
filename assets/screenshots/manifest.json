@@ -1,0 +1,71 @@
+{
+  "generated_at": "2026-09-09T12:02:10.263Z",
+  "base_url": "http://127.0.0.1:8088",
+  "tool": "Playwright 1.63.0 Chromium",
+  "files": [
+    {
+      "file": "overview-dark-1440.png",
+      "sha256": "ab9d79622b088bd2eb74b28b1bd17324e387eba30737c8543fc7b0ba89def90d"
+    },
+    {
+      "file": "models-dark-1440.png",
+      "sha256": "642bef54d8ae10ee9b1370f732fa42f6afb17694c665bacadb9e61dba7bcf30f"
+    },
+    {
+      "file": "sources-dark-1440.png",
+      "sha256": "d4ad51a63d956bb484e18f497c1838ebb51c4e69feb401d1813cf8b52c3343a0"
+    },
+    {
+      "file": "records-dark-1440.png",
+      "sha256": "2dfa970f8e8ec5f969c0d1fdcc26453c9849f43e536a93f01c2e9d08497a9fd4"
+    },
+    {
+      "file": "entities-dark-1440.png",
+      "sha256": "c7457b90e76bbf0fa93b9d6bea62758d312e0a147bed6ea944ba11e8b52e6f0a"
+    },
+    {
+      "file": "master-dark-1440.png",
+      "sha256": "ded1c42623d6f8ee526c327b8716934ac3f74c165692731e3c2acb20b6945d83"
+    },
+    {
+      "file": "matches-dark-1440.png",
+      "sha256": "db96fc0024aa193cd95bd009b3364ee7452cdd9b0409b9a1e72d885fdc60fc8b"
+    },
+    {
+      "file": "inbox-dark-1440.png",
+      "sha256": "5eafcdba6cad47d20f18e2b8b5d1ede8dacf7196daeae8495346498ceb53a718"
+    },
+    {
+      "file": "corrections-dark-1440.png",
+      "sha256": "2c1300242b79af99eb81935ae70013fb6b37f8d9aa9b8031f07ee5a250067524"
+    },
+    {
+      "file": "quality-dark-1440.png",
+      "sha256": "b9df6dcb72529cd7a0d4707787553ec4ef1596c921c129916e1a2d1c57bf966f"
+    },
+    {
+      "file": "simulator-dark-1440.png",
+      "sha256": "4f14395b15b57d09409597b023e1ddd31d74372b4e909e39634581ed210af74d"
+    },
+    {
+      "file": "operations-dark-1440.png",
+      "sha256": "5ecbcf3d7a35ac1a43b85fc19a13e0d3c0eeb81ddb1402277cebfb7dec7a0267"
+    },
+    {
+      "file": "relationships-dark-1440.png",
+      "sha256": "6e81fa54c4eb88efd610231abd0cc06ecb698f9a13ada6a2c2e4bc0133015c72"
+    },
+    {
+      "file": "access-dark-1440.png",
+      "sha256": "71a2d4f3ff699382dbbea4906f2b26b3367f78ddba7186f20689ba9074b0db4b"
+    },
+    {
+      "file": "overview-light-1440.png",
+      "sha256": "f29030cc71dfe5392674de026efcaf1ee7bdafe73d9145c3e850111cc84849e7"
+    },
+    {
+      "file": "master-dark-390.png",
+      "sha256": "804cb275dece690e8fd6772ea5f651202b0cbb95054b5bf300201954155ecf65"
+    }
+  ]
+}

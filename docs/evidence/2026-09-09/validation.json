@@ -1,0 +1,175 @@
+{
+  "generated_at": "2026-09-09T12:02:36.172423+00:00",
+  "host": "macOS-15.5-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "steps": [
+    {
+      "name": "requirements",
+      "command": [
+        "/Users/daniamaro96/Documents/ChatGPT/MDM/backend/.venv/bin/python",
+        "/Users/daniamaro96/Documents/ChatGPT/MDM/scripts/validate_requirements.py"
+      ],
+      "cwd": "/Users/daniamaro96/Documents/ChatGPT/MDM",
+      "exit_code": 0,
+      "output": "validated 30 requirements and 24 acceptance scenarios\n"
+    },
+    {
+      "name": "platform tests",
+      "command": [
+        "/Users/daniamaro96/Documents/ChatGPT/MDM/backend/.venv/bin/pytest",
+        "tests/unit",
+        "tests/property",
+        "tests/integration"
+      ],
+      "cwd": "/Users/daniamaro96/Documents/ChatGPT/MDM",
+      "exit_code": 0,
+      "output": "============================= test session starts ==============================\nplatform darwin -- Python 3.14.5, pytest-8.4.2, pluggy-1.6.0\nrootdir: /Users/daniamaro96/Documents/ChatGPT/MDM\nplugins: hypothesis-6.140.3, anyio-4.15.1, cov-7.0.0\ncollected 22 items\n\ntests/unit/test_file_connectors.py .......                               [ 31%]\ntests/unit/test_http_connector_security.py ...                           [ 45%]\ntests/unit/test_matching.py ..                                           [ 54%]\ntests/unit/test_production_preflight.py ...                              [ 68%]\ntests/property/test_normalization.py ..                                  [ 77%]\ntests/integration/test_api_journey.py ....                               [ 95%]\ntests/integration/test_merge_split.py .                                  [100%]\n\n=============================== warnings summary ===============================\nbackend/.venv/lib/python3.14/site-packages/fastapi/testclient.py:1\n  /Users/daniamaro96/Documents/ChatGPT/MDM/backend/.venv/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n    from starlette.testclient import TestClient as TestClient  # noqa\n\nbackend/.venv/lib/python3.14/site-packages/starlette/testclient.py:53\n  /Users/daniamaro96/Documents/ChatGPT/MDM/backend/.venv/lib/python3.14/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================== 22 passed, 2 warnings in 0.69s ========================\n"
+    },
+    {
+      "name": "web unit",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/Users/daniamaro96/Documents/ChatGPT/MDM/apps/web",
+      "exit_code": 0,
+      "output": "\n> @recordlane/web@0.1.0-alpha.1 test\n> vitest run src\n\n\n RUN  v4.1.11 /Users/daniamaro96/Documents/ChatGPT/MDM/apps/web\n\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  16:02:37\n   Duration  94ms (transform 21ms, setup 0ms, import 27ms, tests 2ms, environment 0ms)\n\n"
+    },
+    {
+      "name": "web build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "cwd": "/Users/daniamaro96/Documents/ChatGPT/MDM/apps/web",
+      "exit_code": 0,
+      "output": "\n> @recordlane/web@0.1.0-alpha.1 build\n> tsc -b && vite build\n\nvite v8.2.2 building client environment for production...\ntransforming...\n\u2713 18 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                   0.51 kB \u2502 gzip:  0.31 kB\ndist/assets/index-D4I7CXRd.css   17.75 kB \u2502 gzip:  4.14 kB\ndist/assets/index-CWypOFpd.js   223.99 kB \u2502 gzip: 69.14 kB\n\n\u2713 built in 107ms\n"
+    },
+    {
+      "name": "web e2e",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e"
+      ],
+      "cwd": "/Users/daniamaro96/Documents/ChatGPT/MDM/apps/web",
+      "exit_code": 0,
+      "output": "\n> @recordlane/web@0.1.0-alpha.1 test:e2e\n> playwright test\n\n\nRunning 2 tests using 1 worker\n\n  \u2713  1 tests/ui.spec.ts:4:1 \u203a all operator workspaces render live API state without console errors (928ms)\n  \u2713  2 tests/ui.spec.ts:18:1 \u203a mobile layout has no horizontal document overflow (161ms)\n\n  2 passed (1.6s)\n"
+    },
+    {
+      "name": "compose config",
+      "command": [
+        "docker",
+        "compose",
+        "-f",
+        "deploy/compose/compose.demo.yaml",
+        "config",
+        "--quiet"
+      ],
+      "cwd": "/Users/daniamaro96/Documents/ChatGPT/MDM",
+      "exit_code": 0,
+      "output": ""
+    },
+    {
+      "name": "helm lint",
+      "command": [
+        "helm",
+        "lint",
+        "deploy/helm/recordlane"
+      ],
+      "cwd": "/Users/daniamaro96/Documents/ChatGPT/MDM",
+      "exit_code": 0,
+      "output": "level=WARN msg=\"missing required values\" message=\"oidc.issuer is required\"\nlevel=WARN msg=\"missing required values\" message=\"oidc.issuer is required\"\n==> Linting deploy/helm/recordlane\n[INFO] Chart.yaml: icon is recommended\n\n1 chart(s) linted, 0 chart(s) failed\n"
+    },
+    {
+      "name": "helm render",
+      "command": [
+        "helm",
+        "template",
+        "recordlane",
+        "deploy/helm/recordlane",
+        "--set",
+        "oidc.issuer=https://id.example/realms/recordlane",
+        "--set",
+        "oidc.audience=recordlane-api"
+      ],
+      "cwd": "/Users/daniamaro96/Documents/ChatGPT/MDM",
+      "exit_code": 0,
+      "output": "---\n# Source: recordlane/templates/networkpolicy.yaml\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata: {name: recordlane-default}\nspec:\n  podSelector: {matchLabels: {app.kubernetes.io/name: recordlane}}\n  policyTypes: [Ingress, Egress]\n  ingress:\n    - ports: [{protocol: TCP, port: 8000}]\n  egress:\n    - to: [{namespaceSelector: {}}]\n      ports: [{protocol: UDP, port: 53}, {protocol: TCP, port: 53}]\n\n\n---\n# Source: recordlane/templates/pdb.yaml\napiVersion: policy/v1\nkind: PodDisruptionBudget\nmetadata: {name: recordlane}\nspec:\n  maxUnavailable: 1\n  selector: {matchLabels: {app.kubernetes.io/name: recordlane, app.kubernetes.io/component: api}}\n\n\n---\n# Source: recordlane/templates/service.yaml\napiVersion: v1\nkind: Service\nmetadata: {name: api, labels: {app.kubernetes.io/name: recordlane}}\nspec:\n  selector: {app.kubernetes.io/name: recordlane, app.kubernetes.io/component: api}\n  ports: [{name: web, port: 80, targetPort: web}, {name: api, port: 8000, targetPort: http}]\n\n\n---\n# Source: recordlane/templates/deployment.yaml\napiVersion: apps/v1\nkind: Deployment\nmetadata: {name: recordlane, labels: {app.kubernetes.io/name: recordlane}}\nspec:\n  replicas: 2\n  selector: {matchLabels: {app.kubernetes.io/name: recordlane, app.kubernetes.io/component: api}}\n  strategy: {type: RollingUpdate, rollingUpdate: {maxUnavailable: 0, maxSurge: 1}}\n  template:\n    metadata: {labels: {app.kubernetes.io/name: recordlane, app.kubernetes.io/component: api}}\n    spec:\n      securityContext: {runAsNonRoot: true, runAsUser: 10001, runAsGroup: 10001, fsGroup: 10001, seccompProfile: {type: RuntimeDefault}}\n      topologySpreadConstraints:\n        - {maxSkew: 1, topologyKey: kubernetes.io/hostname, whenUnsatisfiable: ScheduleAnyway, labelSelector: {matchLabels: {app.kubernetes.io/name: recordlane, app.kubernetes.io/component: api}}}\n      containers:\n        - name: web\n          image: \"ghcr.io/dlamaro96/recordlane-web:0.1.0-alpha.1\"\n          imagePullPolicy: IfNotPresent\n          ports: [{name: web, containerPort: 8080}]\n          readinessProbe: {httpGet: {path: /, port: web}, periodSeconds: 10, timeoutSeconds: 3}\n          resources: \n            limits:\n              cpu: 500m\n              memory: 256Mi\n            requests:\n              cpu: 50m\n              memory: 64Mi\n          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}\n          volumeMounts: [{name: web-tmp, mountPath: /tmp}]\n        - name: api\n          image: \"ghcr.io/dlamaro96/recordlane-api:0.1.0-alpha.1\"\n          imagePullPolicy: IfNotPresent\n          ports: [{name: http, containerPort: 8000}]\n          env:\n            - {name: RECORDLANE_ENVIRONMENT, value: production}\n            - {name: RECORDLANE_DATABASE_URL, valueFrom: {secretKeyRef: {name: recordlane-database, key: database-url}}}\n            - {name: RECORDLANE_OIDC_ISSUER, value: \"https://id.example/realms/recordlane\"}\n            - {name: RECORDLANE_OIDC_AUDIENCE, value: \"recordlane-api\"}\n            - {name: RECORDLANE_SESSION_SECRET, valueFrom: {secretKeyRef: {name: recordlane-session, key: session-secret}}}\n            - {name: RECORDLANE_MASTER_KEY_FILE, value: /run/recordlane/master-key}\n          volumeMounts: [{name: master-key, mountPath: /run/recordlane, readOnly: true}]\n          readinessProbe: {httpGet: {path: /health/ready, port: http}, periodSeconds: 10, timeoutSeconds: 3}\n          livenessProbe: {httpGet: {path: /health/live, port: http}, periodSeconds: 20, timeoutSeconds: 3}\n          resources: \n            limits:\n              cpu: \"2\"\n              memory: 1Gi\n            requests:\n              cpu: 200m\n              memory: 256Mi\n          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}\n      volumes:\n        - {name: master-key, secret: {secretName: recordlane-master-key, items: [{key: master-key, path: master-key}]}}\n        - {name: web-tmp, emptyDir: {medium: Memory, sizeLimit: 32Mi}}\n\n---\n# Source: recordlane/templates/deployment.yaml\napiVersion: apps/v1\nkind: Deployment\nmetadata: {name: recordlane-worker, labels: {app.kubernetes.io/name: recordlane, app.kubernetes.io/component: worker}}\nspec:\n  replicas: 2\n  selector: {matchLabels: {app.kubernetes.io/name: recordlane, app.kubernetes.io/component: worker}}\n  template:\n    metadata: {labels: {app.kubernetes.io/name: recordlane, app.kubernetes.io/component: worker}}\n    spec:\n      securityContext: {runAsNonRoot: true, runAsUser: 10001, seccompProfile: {type: RuntimeDefault}}\n      containers:\n        - name: worker\n          image: \"ghcr.io/dlamaro96/recordlane-api:0.1.0-alpha.1\"\n          command: [python, -m, recordlane.jobs.worker]\n          env:\n            - {name: RECORDLANE_ENVIRONMENT, value: production}\n            - {name: RECORDLANE_DATABASE_URL, valueFrom: {secretKeyRef: {name: recordlane-database, key: database-url}}}\n            - {name: RECORDLANE_OIDC_ISSUER, value: \"https://id.example/realms/recordlane\"}\n            - {name: RECORDLANE_OIDC_AUDIENCE, value: \"recordlane-api\"}\n            - {name: RECORDLANE_SESSION_SECRET, valueFrom: {secretKeyRef: {name: recordlane-session, key: session-secret}}}\n            - {name: RECORDLANE_MASTER_KEY_FILE, value: /run/recordlane/master-key}\n          volumeMounts: [{name: master-key, mountPath: /run/recordlane, readOnly: true}]\n          resources: \n            limits:\n              cpu: \"2\"\n              memory: 2Gi\n            requests:\n              cpu: 200m\n              memory: 256Mi\n          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}\n      volumes: [{name: master-key, secret: {secretName: recordlane-master-key, items: [{key: master-key, path: master-key}]}}]\n---\n# Source: recordlane/templates/migration-job.yaml\napiVersion: batch/v1\nkind: Job\nmetadata:\n  name: \"recordlane-migrate-1\"\n  annotations: {\"helm.sh/hook\": \"pre-install,pre-upgrade\", \"helm.sh/hook-delete-policy\": before-hook-creation}\nspec:\n  backoffLimit: 3\n  template:\n    spec:\n      restartPolicy: Never\n      securityContext: {runAsNonRoot: true, runAsUser: 10001, seccompProfile: {type: RuntimeDefault}}\n      containers:\n        - name: migrate\n          image: \"ghcr.io/dlamaro96/recordlane-api:0.1.0-alpha.1\"\n          command: [python, -m, recordlane.operations.migrate]\n          env:\n            - {name: RECORDLANE_DATABASE_URL, valueFrom: {secretKeyRef: {name: recordlane-database, key: database-url}}}\n          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}\n\n"
+    },
+    {
+      "name": "python sdk live",
+      "command": [
+        "/tmp/recordlane-python-validation/bin/pytest",
+        "tests"
+      ],
+      "cwd": "/Users/daniamaro96/Documents/ChatGPT/recordlane-python",
+      "exit_code": 0,
+      "output": "============================= test session starts ==============================\nplatform darwin -- Python 3.14.5, pytest-8.4.2, pluggy-1.6.0\nrootdir: /Users/daniamaro96/Documents/ChatGPT/recordlane-python\nconfigfile: pyproject.toml\nplugins: respx-0.22.0, asyncio-1.2.0, anyio-4.15.1\nasyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 4 items\n\ntests/test_live.py ...                                                   [ 75%]\ntests/test_unit.py .                                                     [100%]\n\n============================== 4 passed in 0.10s ===============================\n"
+    },
+    {
+      "name": "typescript sdk unit",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/Users/daniamaro96/Documents/ChatGPT/recordlane-typescript",
+      "exit_code": 0,
+      "output": "\n> @recordlane/client@0.1.0-alpha.1 test\n> vitest run tests/client.test.ts\n\n\n RUN  v4.1.11 /Users/daniamaro96/Documents/ChatGPT/recordlane-typescript\n\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  16:02:41\n   Duration  107ms (transform 22ms, setup 0ms, import 30ms, tests 11ms, environment 0ms)\n\n"
+    },
+    {
+      "name": "typescript sdk build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "cwd": "/Users/daniamaro96/Documents/ChatGPT/recordlane-typescript",
+      "exit_code": 0,
+      "output": "\n> @recordlane/client@0.1.0-alpha.1 build\n> tsc -p tsconfig.json\n\n"
+    },
+    {
+      "name": "typescript sdk live",
+      "command": [
+        "npm",
+        "run",
+        "test:live"
+      ],
+      "cwd": "/Users/daniamaro96/Documents/ChatGPT/recordlane-typescript",
+      "exit_code": 0,
+      "output": "\n> @recordlane/client@0.1.0-alpha.1 test:live\n> vitest run tests/live.test.ts\n\n\n RUN  v4.1.11 /Users/daniamaro96/Documents/ChatGPT/recordlane-typescript\n\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  16:02:41\n   Duration  148ms (transform 14ms, setup 0ms, import 20ms, tests 66ms, environment 0ms)\n\n"
+    },
+    {
+      "name": "connector conformance",
+      "command": [
+        "/tmp/recordlane-ecosystem-validation/bin/pytest",
+        "tests"
+      ],
+      "cwd": "/Users/daniamaro96/Documents/ChatGPT/recordlane-ecosystem",
+      "exit_code": 0,
+      "output": "============================= test session starts ==============================\nplatform darwin -- Python 3.14.5, pytest-8.4.2, pluggy-1.6.0\nrootdir: /Users/daniamaro96/Documents/ChatGPT/recordlane-ecosystem\nconfigfile: pyproject.toml\ncollected 1 item\n\ntests/test_template_conformance.py .                                     [100%]\n\n============================== 1 passed in 0.01s ===============================\n"
+    },
+    {
+      "name": "docs check",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/Users/daniamaro96/Documents/ChatGPT/recordlane-docs",
+      "exit_code": 0,
+      "output": "\n> recordlane-docs@0.1.0-alpha.1 test\n> node scripts/check.mjs\n\nChecked 3 HTML files and 27 required guides.\n"
+    },
+    {
+      "name": "docs build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "cwd": "/Users/daniamaro96/Documents/ChatGPT/recordlane-docs",
+      "exit_code": 0,
+      "output": "\n> recordlane-docs@0.1.0-alpha.1 build\n> node scripts/build.mjs\n\nBuilt offline documentation in dist/\n"
+    }
+  ]
+}

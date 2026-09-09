@@ -1,0 +1,12 @@
+name: Documentation
+description: Report a missing, incorrect, or unclear guide.
+labels: [documentation, triage]
+body:
+  - type: input
+    id: page
+    attributes: {label: Page or section}
+    validations: {required: true}
+  - type: textarea
+    id: change
+    attributes: {label: What should change and how you verified it}
+    validations: {required: true}

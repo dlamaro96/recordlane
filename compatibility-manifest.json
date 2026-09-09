@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "release": "0.1.0-alpha.1",
+  "status": "preview-blocked-from-release-publication",
+  "contracts": {"api": "v1", "domain_pack": "v1alpha1", "connector": "1.0", "events": "1.0"},
+  "repositories": {
+    "recordlane": "0.1.0-alpha.1",
+    "recordlane-python": "0.1.0a1",
+    "recordlane-typescript": "0.1.0-alpha.1",
+    "recordlane-ecosystem": "0.1.0a1",
+    "recordlane-docs": "0.1.0-alpha.1"
+  },
+  "deployment": {"helm_chart": "0.1.0-alpha.1", "compose_schema": "demo-v1/production-v1"},
+  "local_images": {
+    "recordlane-demo-api": "sha256:d2aec182a3793d1d6962851f02d645a106ddff10cef602387073c30de2d7b368",
+    "recordlane-demo-web": "sha256:3384bf03e6252fa8eb439114c5a9549ae09e59342468e288e25bc7c2bc051798"
+  },
+  "published_images": null,
+  "notes": ["Local image digests are native arm64 build identities, not registry URLs.", "SDKs require a platform with API v1 and must query /api/v1/capabilities.", "GitHub release publication is intentionally gated while mandatory acceptance scenarios remain blocked."]
+}

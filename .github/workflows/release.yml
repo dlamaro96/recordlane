@@ -1,0 +1,16 @@
+name: release
+on: {workflow_dispatch: {inputs: {tag: {description: 'Existing semver tag', required: true, type: string}}}}
+permissions: {contents: write, packages: write, id-token: write}
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: {fetch-depth: 0}
+      - name: Reject incomplete mandatory evidence
+        run: python3 scripts/release_gate.py
+      - name: Build source and Helm archives
+        run: ./scripts/build_release.sh "${{ inputs.tag }}"
+      - name: Publish release artifacts
+        env: {GH_TOKEN: '${{ github.token }}'}
+        run: gh release create "${{ inputs.tag }}" dist/* --verify-tag --generate-notes

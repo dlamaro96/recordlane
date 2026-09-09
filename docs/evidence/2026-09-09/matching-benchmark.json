@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-09-09",
+  "workload": "10,000 deterministic normalized synthetic labeled pairs; 50% near-duplicate, 50% hard-identifier-distinct",
+  "seed": 741902,
+  "hardware": "macOS-15.5-arm64-arm-64bit-Mach-O",
+  "python": "3.14.5",
+  "elapsed_seconds": 0.1589,
+  "pairs_per_second": 62932.76,
+  "confusion_matrix": {
+    "true_positive": 5000,
+    "true_negative": 5000,
+    "false_positive": 0,
+    "false_negative": 0
+  },
+  "accuracy": 1.0,
+  "limitations": [
+    "single-process in-memory comparison only",
+    "synthetic names are not representative production data",
+    "no database candidate-generation or concurrency included",
+    "not a competitor comparison or capacity guarantee"
+  ]
+}

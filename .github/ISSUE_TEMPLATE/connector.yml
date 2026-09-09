@@ -1,0 +1,16 @@
+name: Connector proposal
+description: Propose or report a connector with an honest validation level.
+labels: [connector, triage]
+body:
+  - type: input
+    id: interface
+    attributes: {label: Vendor and documented interface}
+    validations: {required: true}
+  - type: dropdown
+    id: status
+    attributes: {label: Validation performed, options: [None, Contract tested, Emulator tested, Live vendor tested]}
+    validations: {required: true}
+  - type: textarea
+    id: capabilities
+    attributes: {label: Direction, delta, deletion, checkpoint, auth, consistency, and limits}
+    validations: {required: true}
