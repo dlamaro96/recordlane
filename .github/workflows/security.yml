@@ -12,5 +12,5 @@ jobs:
         with: {fetch-depth: 0}
       - run: docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.24.3 detect --source=/repo --no-banner
       - run: docker build -t recordlane-api:test backend && docker build -t recordlane-web:test apps/web
-      - run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.66.0 image --exit-code 1 --severity CRITICAL recordlane-api:test
-      - run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.66.0 image --exit-code 1 --severity CRITICAL recordlane-web:test
+      - run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.66.0 image --exit-code 1 --severity CRITICAL,HIGH recordlane-api:test
+      - run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.66.0 image --exit-code 1 --severity CRITICAL,HIGH recordlane-web:test

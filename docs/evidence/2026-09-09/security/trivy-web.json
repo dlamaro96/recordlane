@@ -3,8 +3,8 @@
   "Trivy": {
     "Version": "0.74.0"
   },
-  "ReportID": "01a0862e-0a6c-72a7-a8e5-650d00cea084",
-  "CreatedAt": "2026-09-09T16:39:19.404175+04:00",
+  "ReportID": "01a08634-1d2f-7dbf-9a3c-fc3e3b44ab65",
+  "CreatedAt": "2026-09-09T16:45:57.423904+04:00",
   "ArtifactID": "sha256:d49d8d015504474bcd976209fd7ce8e1fa296a32a921b6e448d15d8ca08ac56a",
   "ArtifactName": "recordlane-demo-web:latest",
   "ArtifactType": "container_image",

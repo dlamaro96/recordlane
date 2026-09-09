@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-09T12:39:38.567957+00:00",
+  "generated_at": "2026-09-09T12:46:38.762516+00:00",
   "host": "macOS-15.5-arm64-arm-64bit-Mach-O",
   "machine": "arm64",
   "steps": [
@@ -23,7 +23,7 @@
       ],
       "cwd": "/Users/daniamaro96/Documents/ChatGPT/MDM",
       "exit_code": 0,
-      "output": "============================= test session starts ==============================\nplatform darwin -- Python 3.14.5, pytest-8.4.2, pluggy-1.6.0\nrootdir: /Users/daniamaro96/Documents/ChatGPT/MDM\nplugins: hypothesis-6.140.3, anyio-4.15.1, cov-7.0.0\ncollected 22 items\n\ntests/unit/test_file_connectors.py .......                               [ 31%]\ntests/unit/test_http_connector_security.py ...                           [ 45%]\ntests/unit/test_matching.py ..                                           [ 54%]\ntests/unit/test_production_preflight.py ...                              [ 68%]\ntests/property/test_normalization.py ..                                  [ 77%]\ntests/integration/test_api_journey.py ....                               [ 95%]\ntests/integration/test_merge_split.py .                                  [100%]\n\n=============================== warnings summary ===============================\nbackend/.venv/lib/python3.14/site-packages/fastapi/testclient.py:1\n  /Users/daniamaro96/Documents/ChatGPT/MDM/backend/.venv/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n    from starlette.testclient import TestClient as TestClient  # noqa\n\nbackend/.venv/lib/python3.14/site-packages/starlette/testclient.py:53\n  /Users/daniamaro96/Documents/ChatGPT/MDM/backend/.venv/lib/python3.14/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================== 22 passed, 2 warnings in 1.36s ========================\n"
+      "output": "============================= test session starts ==============================\nplatform darwin -- Python 3.14.5, pytest-9.0.3, pluggy-1.6.0\nrootdir: /Users/daniamaro96/Documents/ChatGPT/MDM\nplugins: hypothesis-6.140.3, anyio-4.15.1, cov-7.0.0\ncollected 22 items\n\ntests/unit/test_file_connectors.py .......                               [ 31%]\ntests/unit/test_http_connector_security.py ...                           [ 45%]\ntests/unit/test_matching.py ..                                           [ 54%]\ntests/unit/test_production_preflight.py ...                              [ 68%]\ntests/property/test_normalization.py ..                                  [ 77%]\ntests/integration/test_api_journey.py ....                               [ 95%]\ntests/integration/test_merge_split.py .                                  [100%]\n\n=============================== warnings summary ===============================\nbackend/.venv/lib/python3.14/site-packages/fastapi/testclient.py:1\n  /Users/daniamaro96/Documents/ChatGPT/MDM/backend/.venv/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n    from starlette.testclient import TestClient as TestClient  # noqa\n\nbackend/.venv/lib/python3.14/site-packages/starlette/testclient.py:53\n  /Users/daniamaro96/Documents/ChatGPT/MDM/backend/.venv/lib/python3.14/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================== 22 passed, 2 warnings in 1.31s ========================\n"
     },
     {
       "name": "web unit",
@@ -33,7 +33,7 @@
       ],
       "cwd": "/Users/daniamaro96/Documents/ChatGPT/MDM/apps/web",
       "exit_code": 0,
-      "output": "\n> @recordlane/web@0.1.0-alpha.1 test\n> vitest run src\n\n\n RUN  v4.1.11 /Users/daniamaro96/Documents/ChatGPT/MDM/apps/web\n\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  16:39:40\n   Duration  101ms (transform 26ms, setup 0ms, import 31ms, tests 2ms, environment 0ms)\n\n"
+      "output": "\n> @recordlane/web@0.1.0-alpha.1 test\n> vitest run src\n\n\n RUN  v4.1.11 /Users/daniamaro96/Documents/ChatGPT/MDM/apps/web\n\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  16:46:41\n   Duration  97ms (transform 21ms, setup 0ms, import 28ms, tests 2ms, environment 0ms)\n\n"
     },
     {
       "name": "web build",
@@ -44,7 +44,7 @@
       ],
       "cwd": "/Users/daniamaro96/Documents/ChatGPT/MDM/apps/web",
       "exit_code": 0,
-      "output": "\n> @recordlane/web@0.1.0-alpha.1 build\n> tsc -b && vite build\n\nvite v8.2.2 building client environment for production...\ntransforming...\n\u2713 18 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                   0.51 kB \u2502 gzip:  0.31 kB\ndist/assets/index-D4I7CXRd.css   17.75 kB \u2502 gzip:  4.14 kB\ndist/assets/index-LJjQwiPW.js   224.39 kB \u2502 gzip: 69.23 kB\n\n\u2713 built in 110ms\n"
+      "output": "\n> @recordlane/web@0.1.0-alpha.1 build\n> tsc -b && vite build\n\nvite v8.2.2 building client environment for production...\ntransforming...\n\u2713 18 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                   0.51 kB \u2502 gzip:  0.31 kB\ndist/assets/index-D4I7CXRd.css   17.75 kB \u2502 gzip:  4.14 kB\ndist/assets/index-LJjQwiPW.js   224.39 kB \u2502 gzip: 69.23 kB\n\n\u2713 built in 105ms\n"
     },
     {
       "name": "web e2e",
@@ -55,7 +55,7 @@
       ],
       "cwd": "/Users/daniamaro96/Documents/ChatGPT/MDM/apps/web",
       "exit_code": 0,
-      "output": "\n> @recordlane/web@0.1.0-alpha.1 test:e2e\n> playwright test\n\n\nRunning 2 tests using 1 worker\n\n  \u2713  1 tests/ui.spec.ts:4:1 \u203a all operator workspaces render live API state without console errors (935ms)\n  \u2713  2 tests/ui.spec.ts:18:1 \u203a mobile layout has no horizontal document overflow (297ms)\n\n  2 passed (1.8s)\n"
+      "output": "\n> @recordlane/web@0.1.0-alpha.1 test:e2e\n> playwright test\n\n\nRunning 2 tests using 1 worker\n\n  \u2713  1 tests/ui.spec.ts:4:1 \u203a all operator workspaces render live API state without console errors (975ms)\n  \u2713  2 tests/ui.spec.ts:18:1 \u203a mobile layout has no horizontal document overflow (160ms)\n\n  2 passed (1.7s)\n"
     },
     {
       "name": "compose config",
@@ -106,7 +106,7 @@
       ],
       "cwd": "/Users/daniamaro96/Documents/ChatGPT/recordlane-python",
       "exit_code": 0,
-      "output": "============================= test session starts ==============================\nplatform darwin -- Python 3.14.5, pytest-8.4.2, pluggy-1.6.0\nrootdir: /Users/daniamaro96/Documents/ChatGPT/recordlane-python\nconfigfile: pyproject.toml\nplugins: respx-0.22.0, asyncio-1.2.0, anyio-4.15.1\nasyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 4 items\n\ntests/test_live.py ...                                                   [ 75%]\ntests/test_unit.py .                                                     [100%]\n\n============================== 4 passed in 0.15s ===============================\n"
+      "output": "============================= test session starts ==============================\nplatform darwin -- Python 3.14.5, pytest-9.0.3, pluggy-1.6.0\nrootdir: /Users/daniamaro96/Documents/ChatGPT/recordlane-python\nconfigfile: pyproject.toml\nplugins: respx-0.22.0, asyncio-1.4.0, anyio-4.15.1\nasyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 4 items\n\ntests/test_live.py ...                                                   [ 75%]\ntests/test_unit.py .                                                     [100%]\n\n============================== 4 passed in 0.10s ===============================\n"
     },
     {
       "name": "typescript sdk unit",
@@ -116,7 +116,7 @@
       ],
       "cwd": "/Users/daniamaro96/Documents/ChatGPT/recordlane-typescript",
       "exit_code": 0,
-      "output": "\n> @recordlane/client@0.1.0-alpha.1 test\n> vitest run tests/client.test.ts\n\n\n RUN  v4.1.11 /Users/daniamaro96/Documents/ChatGPT/recordlane-typescript\n\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  16:39:45\n   Duration  188ms (transform 81ms, setup 0ms, import 101ms, tests 11ms, environment 0ms)\n\n"
+      "output": "\n> @recordlane/client@0.1.0-alpha.1 test\n> vitest run tests/client.test.ts\n\n\n RUN  v4.1.11 /Users/daniamaro96/Documents/ChatGPT/recordlane-typescript\n\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  16:46:44\n   Duration  111ms (transform 24ms, setup 0ms, import 32ms, tests 12ms, environment 0ms)\n\n"
     },
     {
       "name": "typescript sdk build",
@@ -138,7 +138,7 @@
       ],
       "cwd": "/Users/daniamaro96/Documents/ChatGPT/recordlane-typescript",
       "exit_code": 0,
-      "output": "\n> @recordlane/client@0.1.0-alpha.1 test:live\n> vitest run tests/live.test.ts\n\n\n RUN  v4.1.11 /Users/daniamaro96/Documents/ChatGPT/recordlane-typescript\n\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  16:39:47\n   Duration  163ms (transform 18ms, setup 0ms, import 24ms, tests 73ms, environment 0ms)\n\n"
+      "output": "\n> @recordlane/client@0.1.0-alpha.1 test:live\n> vitest run tests/live.test.ts\n\n\n RUN  v4.1.11 /Users/daniamaro96/Documents/ChatGPT/recordlane-typescript\n\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  16:46:45\n   Duration  161ms (transform 14ms, setup 0ms, import 20ms, tests 78ms, environment 0ms)\n\n"
     },
     {
       "name": "connector conformance",
@@ -148,7 +148,7 @@
       ],
       "cwd": "/Users/daniamaro96/Documents/ChatGPT/recordlane-ecosystem",
       "exit_code": 0,
-      "output": "============================= test session starts ==============================\nplatform darwin -- Python 3.14.5, pytest-8.4.2, pluggy-1.6.0\nrootdir: /Users/daniamaro96/Documents/ChatGPT/recordlane-ecosystem\nconfigfile: pyproject.toml\ncollected 1 item\n\ntests/test_template_conformance.py .                                     [100%]\n\n============================== 1 passed in 0.01s ===============================\n"
+      "output": "============================= test session starts ==============================\nplatform darwin -- Python 3.14.5, pytest-9.0.3, pluggy-1.6.0\nrootdir: /Users/daniamaro96/Documents/ChatGPT/recordlane-ecosystem\nconfigfile: pyproject.toml\ncollected 1 item\n\ntests/test_template_conformance.py .                                     [100%]\n\n============================== 1 passed in 0.01s ===============================\n"
     },
     {
       "name": "docs check",

@@ -20,7 +20,7 @@
   "documentation_url": "https://dlamaro96.github.io/recordlane-docs/",
   "deployment": {"helm_chart": "0.1.0-alpha.1", "compose_schema": "demo-v1/production-v1"},
   "local_images": {
-    "recordlane-demo-api": "sha256:a1c55051f25ae12aca4ab6e234d458e209a7fb02a1ca113dc6dcdfb46060a149",
+    "recordlane-demo-api": "sha256:db33a60b056fec62b28816f820f01e5c50bcbd158150b779d24d045976948d1d",
     "recordlane-demo-web": "sha256:97da7f2918230e4ec067ba4397c10389103cbe3dc33ddd2ac45b6da1ca3d76df"
   },
   "published_images": null,

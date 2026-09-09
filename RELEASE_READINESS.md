@@ -31,7 +31,7 @@ keeps every other skipped outcome `BLOCKED`. A skip is not a pass.
 - Clean-machine docs quickstart plus signed/provenanced registry/package/chart
   publication and consumer verification.
 
-The final native-arm64 API and web images have zero Trivy critical findings;
+The final native-arm64 API and web images have zero Trivy high or critical findings;
 Gitleaks found no secrets. The high-impact application completeness findings in
 `security_best_practices_report.md` remain release blockers and are not waived.
 

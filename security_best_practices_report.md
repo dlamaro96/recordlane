@@ -4,7 +4,7 @@ Reviewed 2026-09-09 against the FastAPI, general browser JavaScript, and React g
 
 ## Executive summary
 
-No known critical vulnerability is being waived. Gitleaks found no secrets, and Trivy found zero critical vulnerabilities in both rebuilt native-arm64 images after the API runtime was moved to a pinned, upgraded Alpine base. The API centralizes authentication, validates OIDC JWT signature/issuer/audience and workspace claims, applies workspace predicates, rejects insecure production settings, ships non-root/read-only containers, uses strict CORS/host/CSP headers, and has no raw-HTML/eval frontend sinks. One high-severity completeness gap—missing browser OIDC authorization-code/PKCE sessions—blocks a production release. Other residual findings below remain explicit alpha limitations.
+No known package vulnerability rated high or critical is being waived in the final local images. Gitleaks found no secrets, and Trivy found zero high or critical vulnerabilities in both rebuilt native-arm64 images. During the review, GitHub Dependabot identified high-severity Python dependency advisories; the affected direct dependencies were upgraded to fixed releases and the images were rebuilt and rescanned. The API centralizes authentication, validates OIDC JWT signature/issuer/audience and workspace claims, applies workspace predicates, rejects insecure production settings, ships non-root/read-only containers, uses strict CORS/host/CSP headers, and has no raw-HTML/eval frontend sinks. One high-severity completeness gap—missing browser OIDC authorization-code/PKCE sessions—blocks a production release. Other residual findings below remain explicit alpha limitations.
 
 ## High
 
@@ -70,4 +70,4 @@ No known critical vulnerability is being waived. Gitleaks found no secrets, and 
 - Unknown hash routes are allowlisted instead of driving privileged UI selection.
 - The container UI uses same-origin API routing and contains no browser secrets.
 - SSRF validation blocks URL credentials, unapproved hosts, redirects, metadata endpoints, and unapproved private networks.
-- Exact scan reports are retained at `docs/evidence/2026-09-09/security/`; both final local image reports contain zero critical findings. This result is arm64-only and does not stand in for the blocked amd64/multi-architecture gate.
+- Exact scan reports are retained at `docs/evidence/2026-09-09/security/`; both final local image reports contain zero high or critical findings. This result is arm64-only and does not stand in for the blocked amd64/multi-architecture gate.
