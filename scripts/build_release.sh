@@ -8,4 +8,4 @@ mkdir -p "$release_root/dist"
 git -C "$release_root" archive --format=tar.gz --prefix="recordlane-${release_tag#v}/" -o "$release_root/dist/recordlane-${release_tag#v}.tar.gz" HEAD
 helm package "$release_root/deploy/helm/recordlane" --version "${release_tag#v}" --app-version "${release_tag#v}" --destination "$release_root/dist"
 syft "dir:$release_root" -o spdx-json="$release_root/dist/recordlane-${release_tag#v}.sbom.spdx.json"
-(cd "$release_root/dist" && (sha256sum * 2>/dev/null || shasum -a 256 *)) > "$release_root/dist/SHA256SUMS"
+(cd "$release_root/dist" && find . -maxdepth 1 -type f ! -name SHA256SUMS -print | LC_ALL=C sort | xargs shasum -a 256) > "$release_root/dist/SHA256SUMS"
