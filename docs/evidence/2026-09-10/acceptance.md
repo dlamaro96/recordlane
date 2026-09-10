@@ -3,8 +3,9 @@
 Date: 2026-09-10 (Asia/Dubai)  
 Environment: macOS arm64, Python 3.14.5, Node 20.19.6, Docker 29.5.2,
 PostgreSQL 17.6, Keycloak 26.7.3, kind v1.37.0 node image.  
-Revision: working tree immediately before the controlled candidate commit; this
-field must be replaced with the immutable commit before publication.
+Implementation revision: `7263581b9391b097487ab65d5c697b171a5f802f`.
+The candidate tag includes this evidence document as a metadata-only child
+commit; `SOURCE_COMMIT` in the release identifies that exact tagged commit.
 
 ## Executed outcomes
 

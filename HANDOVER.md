@@ -9,9 +9,11 @@
 - Documentation: https://github.com/dlamaro96/recordlane-docs — `/Users/daniamaro96/Documents/ChatGPT/recordlane-docs`
 - Live static docs: https://dlamaro96.github.io/recordlane-docs/
 
-These are source-preview repositories, not a production release. No PyPI/npm
-package, registry image, chart repository, signature, or GitHub Release is
-claimed while the mandatory acceptance gate remains blocked.
+These repositories contain the complete prepublication open-alpha candidate.
+The final consolidated A–W acceptance run passed 23/23 scenarios; AX remains
+blocked until the exact tagged candidate, packages, images, checksums,
+signatures, and attestations are published and independently read back. No
+PyPI/npm registry publication is claimed.
 
 ## Make the next change
 
@@ -44,11 +46,11 @@ Rotate the OIDC client/service credentials at the issuer, mount a new master key
 
 ## Publish a later version
 
-1. Close every mandatory gate or record it as still blocked; the release workflow refuses incomplete acceptance.
+1. Close every prepublication gate or record it as still blocked; the release workflow refuses incomplete prepublication acceptance.
 2. Update changelogs, contracts, versions, compatibility manifest, docs and pinned asset revision.
 3. Build/test on native amd64 and arm64, run scans, backup/upgrade/restore and clean-install tests.
 4. Commit/tag the five repositories in platform → ecosystem → SDKs → docs order.
-5. Run `scripts/build_release.sh <prerelease-tag>`, verify archives/checksums/SBOM as a consumer, then use the protected release workflow for registry/packages/signatures.
+5. Run `scripts/build_release.sh <prerelease-tag>`, verify archives/checksums/SBOM as a consumer, then use the protected release workflow for registry/packages/signatures. Run AX with `RECORDLANE_RELEASE_TAG=<tag>` after publication.
 6. Read back repository settings, release assets, package/image/chart digests, and docs URL. Never infer success from a workflow dispatch alone.
 
 Current owner is `dlamaro96`; no additional maintainers or monitored support mailbox are asserted.
