@@ -11,7 +11,10 @@ COPY pyproject.toml README.md ./
 RUN pip install \
     fastapi==0.141.1 uvicorn==0.35.0 pydantic==2.13.5 pydantic-settings==2.11.0 \
     SQLAlchemy==2.0.52 'psycopg[binary]==3.3.5' PyYAML==6.0.3 httpx==0.28.1 \
-    python-multipart==0.0.31 cryptography==50.0.0 'PyJWT[crypto]==2.13.0'
+    python-multipart==0.0.31 cryptography==50.0.0 'PyJWT[crypto]==2.13.0' \
+    prometheus-client==0.22.1 opentelemetry-api==1.44.0 opentelemetry-sdk==1.44.0 \
+    opentelemetry-exporter-otlp-proto-http==1.44.0 \
+    opentelemetry-instrumentation-fastapi==0.65b0 pyarrow==25.0.1
 COPY src ./src
 RUN pip install --no-deps .
 USER 10001:10001

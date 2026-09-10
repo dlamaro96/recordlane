@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-09-10",
+  "workload": "100,000 normalized synthetic source records in 50,000 labeled comparisons; 50% near-duplicate, 50% hard-identifier-distinct; skewed common-name prefixes",
+  "seed": 741902,
+  "hardware": "macOS-15.5-arm64-arm-64bit-Mach-O",
+  "python": "3.14.5",
+  "elapsed_seconds": 2.010403,
+  "source_records_per_second": 49741.27,
+  "comparisons_per_second": 24870.63,
+  "process_peak_rss_bytes": 90406912,
+  "confusion_matrix": {
+    "true_positive": 0,
+    "true_negative": 25000,
+    "false_positive": 0,
+    "false_negative": 25000
+  },
+  "pairwise_accuracy": 0.5,
+  "failure": "Benchmark invoked the policy-driven matcher without an explicit policy, so the empty default had no comparisons and rejected every pair. The harness was repaired and rerun; this failed evidence is retained."
+}

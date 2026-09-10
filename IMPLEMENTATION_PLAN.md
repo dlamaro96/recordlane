@@ -1,22 +1,21 @@
 # Implementation plan
 
-Updated: 2026-09-09
+Updated: 2026-09-10
 
 ## Continuation checkpoint
 
-- Completed: stable source-object lifecycle and temporal projection; strict shared
-  domain-policy compiler; multipass candidate index; exact side-effect-free
-  policy simulation; governed activation with real remaster job; task action
-  validation; typed/recoverable worker foundation; versioned alpha migration;
-  light-first responsive UI; current OpenAPI/config contracts; real light-mode
-  screenshot capture and docs asset sync.
-- Next dependency order: overlapping PostgreSQL transaction tests and mutation
-  idempotency; consumer-scoped publication/reconciliation jobs; source setup and
-  connector scheduling journeys; production OIDC BFF/SCIM; field authorization
-  and PostgreSQL RLS; failure injection; clean production/Kubernetes/offline
-  installation; signed release artifacts.
-- Release posture: working alpha. Production and signed release gates remain
-  blocked until the outstanding acceptance scenarios pass.
+- Completed: source-object lifecycle and temporal projection; shared domain-policy
+  compiler; deterministic and Fellegi–Sunter matching; exact simulation and
+  remastering; transactional governance; fenced workers; durable publication and
+  reconciliation; browser OIDC/SCIM/service identities; field authorization and
+  PostgreSQL RLS; secret adapters; observability; versioned recovery; light-first
+  responsive UI; clean contributor/docs flow; Compose, offline, and kind installs;
+  current contracts, screenshots, diagrams, and 100k synthetic benchmark.
+- Current dependency order: commit and verify the exact candidate; publish signed
+  multi-architecture prerelease artifacts; run consumer verification; reconcile
+  compatibility/docs/evidence; then close AX only if every external readback passes.
+- Release posture: working open alpha. Prepublication gates pass; final promotion
+  remains blocked on postpublication verification.
 
 1. Establish the contract, requirement traceability, ADRs, and evidence format.
 2. Deliver a thin end-to-end supplier mastering journey on PostgreSQL: ingest,

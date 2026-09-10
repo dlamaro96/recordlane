@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 import unicodedata
 from dataclasses import dataclass
@@ -177,6 +178,8 @@ class CompiledPolicy:
                 )
         score = 0.0
         total_weight = 0.0
+        log_likelihood = 0.0
+        algorithm = self.document["matching"].get("algorithm", "weighted_score")
         for rule in self.document["matching"]["comparisons"]:
             field = rule["field"]
             a, b = left.get(field), right.get(field)
@@ -192,15 +195,27 @@ class CompiledPolicy:
             weight = float(rule["weight"])
             total_weight += weight
             score += component * weight
-            evidence.append(
-                {
-                    "field": field,
-                    "comparator": comparator,
-                    "score": round(component, 4),
-                    "weight": weight,
-                }
-            )
-        score = round(score / total_weight, 4) if total_weight else 0.0
+            item = {
+                "field": field,
+                "comparator": comparator,
+                "score": round(component, 4),
+                "weight": weight,
+            }
+            if algorithm == "fellegi_sunter":
+                agreement = math.log(rule["m_probability"] / rule["u_probability"])
+                disagreement = math.log((1 - rule["m_probability"]) / (1 - rule["u_probability"]))
+                contribution = disagreement + component * (agreement - disagreement)
+                log_likelihood += contribution
+                item["log_likelihood_ratio"] = round(contribution, 4)
+            evidence.append(item)
+        if algorithm == "fellegi_sunter":
+            prior = self.document["matching"]["prior_match_probability"]
+            posterior_log_odds = math.log(prior / (1 - prior)) + log_likelihood
+            score = round(1 / (1 + math.exp(-posterior_log_odds)), 6)
+            score_kind = "estimated_match_probability"
+        else:
+            score = round(score / total_weight, 4) if total_weight else 0.0
+            score_kind = "weighted_similarity"
         thresholds = self.document["matching"]["thresholds"]
         if contradictions:
             decision = "keep_separate"
@@ -212,6 +227,7 @@ class CompiledPolicy:
             decision = "no_link"
         return {
             "score": score,
+            "score_kind": score_kind,
             "decision": decision,
             "evidence": evidence,
             "contradictions": contradictions,
@@ -272,6 +288,8 @@ def compile_policy(definition: dict[str, Any]) -> CompiledPolicy:
             "allowedValues",
             "pattern",
             "normalizer",
+            "read_roles",
+            "write_roles",
         }
         extra = set(item) - allowed_attribute
         if extra:
@@ -280,6 +298,14 @@ def compile_policy(definition: dict[str, Any]) -> CompiledPolicy:
                 f"unsupported attribute settings for {item.get('key', '?')}: {settings}"
             )
         attribute = dict(item)
+        for access_key in ("read_roles", "write_roles"):
+            if access_key in attribute:
+                roles = attribute[access_key]
+                if not isinstance(roles, list) or not all(
+                    isinstance(role, str) and role for role in roles
+                ):
+                    raise PolicyError(f"{access_key} for {attribute.get('key', '?')} must be roles")
+                attribute[access_key] = sorted(set(roles))
         if attribute.get("type", "string") not in ATTRIBUTE_TYPES:
             raise PolicyError(f"unsupported attribute type for {attribute.get('key', '?')}")
         if attribute.get("normalizer", "preserve") not in NORMALIZERS:
@@ -325,6 +351,8 @@ def compile_policy(definition: dict[str, Any]) -> CompiledPolicy:
         "auto_link",
         "review",
         "hard_conflicts",
+        "algorithm",
+        "prior_match_probability",
     }
     extra_matching = set(matching) - allowed_matching
     if extra_matching:
@@ -347,12 +375,33 @@ def compile_policy(definition: dict[str, Any]) -> CompiledPolicy:
                 raise PolicyError("blocking prefix length must be between 1 and 64")
     comparisons = matching.get("comparisons", [])
     for rule in comparisons:
-        if set(rule) - {"field", "comparator", "weight", "missing_score"}:
+        if set(rule) - {
+            "field",
+            "comparator",
+            "weight",
+            "missing_score",
+            "m_probability",
+            "u_probability",
+        }:
             raise PolicyError(f"unsupported comparison settings for {rule.get('field', '?')}")
         if rule.get("comparator") not in {"exact", "sequence_ratio"}:
             raise PolicyError(f"unsupported comparator: {rule.get('comparator')}")
         if float(rule.get("weight", 0)) <= 0:
             raise PolicyError("comparison weight must be positive")
+    algorithm = matching.get("algorithm", "weighted_score")
+    if algorithm not in {"weighted_score", "fellegi_sunter"}:
+        raise PolicyError("unsupported matching algorithm")
+    prior = float(matching.get("prior_match_probability", 0.01))
+    if algorithm == "fellegi_sunter":
+        if not 0 < prior < 1:
+            raise PolicyError("Fellegi-Sunter prior_match_probability must be between zero and one")
+        for rule in comparisons:
+            m_probability = float(rule.get("m_probability", 0))
+            u_probability = float(rule.get("u_probability", 0))
+            if not 0 < u_probability < m_probability < 1:
+                raise PolicyError(
+                    "Fellegi-Sunter comparisons require 0 < u_probability < m_probability < 1"
+                )
     thresholds = matching.get(
         "thresholds",
         {
@@ -384,6 +433,8 @@ def compile_policy(definition: dict[str, Any]) -> CompiledPolicy:
         "identifiers": identifiers,
         "relationships": raw.get("relationships", []),
         "matching": {
+            "algorithm": algorithm,
+            "prior_match_probability": prior,
             "blocking": blocking,
             "comparisons": comparisons,
             "thresholds": {

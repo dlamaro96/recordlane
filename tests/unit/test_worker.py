@@ -1,11 +1,25 @@
 # SPDX-License-Identifier: Apache-2.0
+import multiprocessing
+import os
+import time
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import func, select
+import pytest
+from sqlalchemy import func, select, update
 
 from recordlane.database import SessionLocal
 from recordlane.jobs import worker
 from recordlane.models.tables import DurableJob, Source, Workspace
+
+
+def _run_crashing_worker() -> None:
+    worker.WORKER_ID = f"crashed-worker:{os.getpid()}"
+
+    def crash(_db, _job):
+        os._exit(17)
+
+    worker.HANDLERS["process_crash"] = crash
+    worker.run_once()
 
 
 def workspace_id() -> str:
@@ -18,7 +32,9 @@ def workspace_id() -> str:
 
 def add_job(wid: str, kind: str, **values) -> str:
     with SessionLocal.begin() as db:
-        job = DurableJob(workspace_id=wid, kind=kind, payload={"input": "retained"}, **values)
+        job = DurableJob(
+            workspace_id=wid, kind=kind, payload={"input": "retained"}, **values
+        )
         db.add(job)
         db.flush()
         return job.id
@@ -95,6 +111,81 @@ def test_handler_failure_rolls_back_effects_and_retries(monkeypatch):
         assert job.status == "retry"
         assert job.payload == {"input": "retained"}
         assert job.last_error == "RuntimeError"
-        assert db.scalar(
-            select(func.count(Source.id)).where(Source.key == "must-rollback")
-        ) == 0
+        assert (
+            db.scalar(
+                select(func.count(Source.id)).where(Source.key == "must-rollback")
+            )
+            == 0
+        )
+
+
+def test_process_kill_is_recovered_and_stale_completion_is_fenced(monkeypatch):
+    if "fork" not in multiprocessing.get_all_start_methods():
+        pytest.skip("requires a fork-capable process runtime")
+    job_id = add_job(workspace_id(), "process_crash")
+    process = multiprocessing.get_context("fork").Process(target=_run_crashing_worker)
+    process.start()
+    process.join(timeout=10)
+    assert process.exitcode == 17
+
+    with SessionLocal.begin() as db:
+        crashed = db.get(DurableJob, job_id)
+        assert crashed.status == "running"
+        crashed_owner = crashed.lease_owner
+        crashed_fence = crashed.lease_version
+        crashed.lease_expires_at = datetime.now(UTC) - timedelta(seconds=1)
+
+    monkeypatch.setattr(worker, "WORKER_ID", f"replacement-worker:{os.getpid()}")
+    reclaimed = worker.claim_one()
+    assert reclaimed == (job_id, crashed_fence + 1)
+    with SessionLocal.begin() as db:
+        stale = db.execute(
+            update(DurableJob)
+            .where(
+                DurableJob.id == job_id,
+                DurableJob.lease_owner == crashed_owner,
+                DurableJob.lease_version == crashed_fence,
+            )
+            .values(status="complete")
+        )
+        assert stale.rowcount == 0
+        current = db.get(DurableJob, job_id)
+        current.lease_expires_at = datetime.now(UTC) - timedelta(seconds=1)
+
+    monkeypatch.setitem(
+        worker.HANDLERS, "process_crash", lambda _db, _job: {"recovered": True}
+    )
+    assert worker.run_once() is True
+    with SessionLocal() as db:
+        recovered = db.get(DurableJob, job_id)
+        assert recovered.status == "complete"
+        assert recovered.lease_version == crashed_fence + 2
+        assert recovered.payload["result"] == {"recovered": True}
+
+
+def test_lease_heartbeat_renews_only_the_current_fence(monkeypatch):
+    job_id = add_job(workspace_id(), "slow")
+    monkeypatch.setattr(worker, "LEASE_SECONDS", 0.6)
+    renewals: list[bool] = []
+    actual_renew = worker.renew_lease
+
+    def observed_renew(job: str, fence: int) -> bool:
+        renewed = actual_renew(job, fence)
+        renewals.append(renewed)
+        return renewed
+
+    monkeypatch.setattr(worker, "renew_lease", observed_renew)
+    monkeypatch.setitem(
+        worker.HANDLERS,
+        "slow",
+        lambda _db, _job: (time.sleep(0.7) or {"heartbeats": True}),
+    )
+
+    assert worker.run_once() is True
+    assert renewals and all(renewals)
+    with SessionLocal() as db:
+        completed = db.get(DurableJob, job_id)
+        assert completed.status == "complete"
+        assert completed.lease_owner is None
+
+    assert actual_renew(job_id, completed.lease_version - 1) is False

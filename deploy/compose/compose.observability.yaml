@@ -1,0 +1,40 @@
+services:
+  prometheus:
+    image: prom/prometheus:v3.8.1
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=7d"]
+    volumes:
+      - ../observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../observability/recordlane-alerts.yml:/etc/prometheus/recordlane-alerts.yml:ro
+      - prometheus-data:/prometheus
+    secrets: [recordlane-metrics-token]
+    ports: ["127.0.0.1:59090:9090"]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    restart: unless-stopped
+  grafana:
+    image: grafana/grafana:12.3.0
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_admin
+    secrets: [grafana_admin]
+    volumes:
+      - ../observability/grafana:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+    ports: ["127.0.0.1:53000:3000"]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    depends_on: [prometheus]
+    restart: unless-stopped
+secrets:
+  grafana_admin:
+    file: ../observability/grafana-admin.demo.txt
+  recordlane-metrics-token:
+    file: ./secrets/recordlane-metrics-token.example
+volumes:
+  prometheus-data:
+  grafana-data:

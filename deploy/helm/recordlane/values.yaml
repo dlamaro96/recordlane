@@ -8,15 +8,28 @@ image:
 database:
   secretName: recordlane-database
   urlKey: database-url
+  migrationSecretName: recordlane-migration-database
+  migrationUrlKey: database-url
 oidc:
   issuer: ""
   audience: recordlane
+  clientId: recordlane
+publicUrl: https://recordlane.example.com
+probeHost: recordlane.example.com
+allowedOrigins: '["https://recordlane.example.com"]'
+allowedHosts: '["recordlane.example.com","api"]'
 sessionSecret:
   secretName: recordlane-session
   key: session-secret
 masterKey:
   secretName: recordlane-master-key
   key: master-key
+scimToken:
+  secretName: recordlane-scim
+  key: scim-token
+metricsToken:
+  secretName: recordlane-metrics
+  key: metrics-token
 ingress:
   enabled: false
   className: ""

@@ -2,7 +2,7 @@ schema_version: "1.0"
 platform_compatibility: ">=0.1.0-alpha.1,<0.2.0"
 connectors:
   - id: files
-    formats: [csv, jsonl]
+    formats: [csv, jsonl, parquet]
     direction: [read, write]
     full_read: true
     incremental: explicit_manifest_cursor
@@ -12,7 +12,7 @@ connectors:
     checkpoint: record_count_and_manifest_checksum
     consistency: atomic_rename_when_supported
     validation: integration_tested
-    limitations: [parquet adapter not yet implemented]
+    limitations: [streaming memory bounds depend on the selected parser and batch size]
   - id: postgresql
     direction: [read, controlled_write]
     full_read: true
@@ -22,7 +22,7 @@ connectors:
     write_operations: [upsert_with_explicit_ownership]
     checkpoint: source_timestamp_and_primary_key
     consistency: source_snapshot_dependent
-    validation: local_integration_pending
+    validation: local_postgresql_17_integration_tested
   - id: http-rest
     direction: [read]
     full_read: true
@@ -32,7 +32,7 @@ connectors:
     write_operations: []
     checkpoint: durable_cursor_after_processing
     consistency: remote_api_dependent
-    validation: local_integration_pending
+    validation: local_paginated_http_integration_tested
   - id: odata
     direction: [read]
     full_read: true
@@ -42,7 +42,7 @@ connectors:
     write_operations: []
     checkpoint: nextLink_or_deltaLink
     consistency: service_dependent
-    validation: contract_tested_only
+    validation: contract_tested_no_live_vendor_credentials
   - id: inbound-webhook
     direction: [read]
     full_read: false
@@ -52,7 +52,7 @@ connectors:
     write_operations: []
     checkpoint: event_id_after_durable_recording
     consistency: at_least_once
-    validation: contract_tested_only
+    validation: local_signed_event_integration_tested
   - id: outbound-webhook
     direction: [write]
     full_read: false
@@ -62,7 +62,7 @@ connectors:
     write_operations: [approved_event_delivery]
     checkpoint: per_destination_delivery_attempt
     consistency: at_least_once
-    validation: local_integration_pending
+    validation: local_idempotent_consumer_integration_tested
   - id: s3-compatible
     direction: [read, write]
     full_read: true
@@ -72,7 +72,7 @@ connectors:
     write_operations: [object_export]
     checkpoint: object_version_and_checksum
     consistency: provider_dependent
-    validation: not_implemented
+    validation: signed_url_contract_tested_no_live_vendor_credentials
   - id: azure-blob
     direction: [read, write]
     full_read: true
@@ -82,7 +82,7 @@ connectors:
     write_operations: [blob_export]
     checkpoint: etag_and_checksum
     consistency: provider_dependent
-    validation: not_implemented
+    validation: signed_url_contract_tested_no_live_vendor_credentials
   - id: google-cloud-storage
     direction: [read, write]
     full_read: true
@@ -92,5 +92,4 @@ connectors:
     write_operations: [object_export]
     checkpoint: generation_and_checksum
     consistency: provider_dependent
-    validation: not_implemented
-
+    validation: signed_url_contract_tested_no_live_vendor_credentials

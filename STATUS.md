@@ -1,6 +1,6 @@
 # Execution status
 
-Updated: 2026-09-09T18:39:00+04:00
+Updated: 2026-09-10T11:27:00+04:00
 
 ## Environment
 
@@ -20,11 +20,12 @@ Updated: 2026-09-09T18:39:00+04:00
 ## Current state
 
 - Contract read completely and persisted: COMPLETE.
-- Requirement/evidence matrix: COMPLETE and honest; 11/24 acceptance scenarios pass, 2 have narrower integration evidence, and 11 remain blocked. Eight continuation subrequirements separate completed source identity, policy, simulation, UI, migration, and worker outcomes from remaining security/concurrency work.
-- Product implementation: WORKING ALPHA. Stable source objects, immutable observations, current-state projections, temporal membership, executable domain policies, exact impact simulation, governed remastering, versioned migrations, and a redesigned light-first UI now extend the existing mastering/governance journey.
-- Verification: 49 repository tests pass with 13 explicit acceptance skips; the focused PostgreSQL 17 lifecycle/policy/migration/worker run passes 20/20; frontend unit/build and 2 Playwright scenarios pass; 16 real light-mode screenshots were captured and visually inspected. Both SDKs, connector conformance, Compose, Helm, offline docs, Gitleaks, and arm64 image Trivy gates pass for tested commit `eec8e49`.
-- Release readiness: BLOCKED. Interactive production OIDC, exhaustive authorization/RLS, configuration import across workspaces, overlapping transaction and process-kill failure injection, clean production/Kubernetes/offline installs, amd64 verification, and signed published artifacts remain incomplete.
-- External publication: COMPLETE for the five public source repositories and GitHub Pages documentation. Discussions, private vulnerability reporting, secret scanning/push protection, and protected `main` rules were verified by API readback. No package, registry image, chart repository, signature, attestation, or GitHub Release is claimed while the release gate remains blocked.
+- Requirement/evidence matrix: UPDATED. Acceptance A–W now have executable passing evidence; X remains blocked until the controlled candidate release is published and verified as a consumer.
+- Product implementation: WORKING OPEN ALPHA. Stable source identities and immutable observations, configuration-driven deterministic and Fellegi–Sunter matching, impact simulation, field/action/workspace authorization, OIDC/SCIM/service identities, encrypted/Vault secret references, fenced jobs, transactional publication/reconciliation, observability, recovery, and a redesigned light-first UI operate against persisted backend state.
+- Verification: the final consolidated A–W acceptance invocation passes 23/23 scenarios in 239.46 seconds. Separately, 72 non-acceptance backend tests pass with two environment-specific PostgreSQL skips; the PostgreSQL/RLS paths run in the acceptance and CI PostgreSQL suites. Frontend unit/build and nine Playwright scenarios pass, including real Keycloak login, persisted UI actions, offline mastering/publication, mobile layout, and automated WCAG A/AA checks. Sixteen clean seeded light-mode screenshots were recaptured and inspected. The 100,000-record synthetic matching exercise processed 59,135 source records/s with 1.0 pairwise accuracy in 1.691 seconds and 132,415,488-byte peak RSS; its in-memory synthetic limits are explicit.
+- Deployment/recovery: hardened production Compose and a disposable kind/Helm installation pass; the disconnected internal-network profile completes real login through local Keycloak, ingestion, matching, approval, and local publication; isolated restore preserves semantic counts and puts uncertain deliveries into reconciliation.
+- Release readiness: PREPUBLICATION GATES PASS; FINAL GATE BLOCKED on AX. The next controlled step is a signed multi-architecture prerelease candidate, followed by consumer verification and final evidence reconciliation. Live-vendor compatibility remains unverified where credentials were unavailable; DNS connection pinning, privileged-DB tamper resistance, broader cluster/performance workloads, and HA failover remain documented limitations.
+- External publication: the five public source repositories and GitHub Pages documentation are live. No registry image, chart/package release, signature, attestation, or GitHub Release is claimed until the candidate workflow actually succeeds and is read back.
 
 ## Evidence convention
 

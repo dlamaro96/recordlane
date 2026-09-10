@@ -2,40 +2,38 @@
 
 Target: 0.1.0-alpha.1
 
-The project is a working open alpha but is not production-release-ready. The
-named acceptance suite currently reports 11 passed and 13 explicitly skipped;
-the matrix gives two skipped scenarios narrower `INTEGRATION_TESTED` status and
-keeps the other 11 skipped outcomes `BLOCKED`. A skip is not a pass.
+Recordlane is a working open alpha. Acceptance A–W have executable passing
+evidence. Acceptance X remains blocked until the controlled prerelease candidate
+is published and verified by digest, signature, attestation, and consumer install.
+A skipped or blocked check is never counted as a pass.
 
 ## Mandatory gates
 
-- [ ] Clean-install demo and bundled identity provider
-- [x] Core conflicting-source mastering, approval/staleness, merge/split repair, multilingual constraints, SDK/conformance, real UI asset, and security-evidence scenarios
-- [ ] Workspace/field/action authorization and deprovisioning
+- [x] Clean-install demo and bundled identity provider
+- [x] Conflicting-source mastering, governance, correction, and multilingual constraints
+- [x] Workspace, action, field, service-identity, SCIM, and deprovisioning controls
 - [x] SDK and connector conformance against the running service
-- [ ] Offline, Compose production, and disposable Kubernetes validation
-- [ ] Backup/isolated restore and prior-schema upgrade rehearsal
-- [ ] Security, licensing, secrets, accessibility, and dependency gates
-- [x] Real screenshots, diagrams, documentation build, and link checks
-- [ ] Published release/package/image/chart verification (five source repositories and GitHub Pages are verified)
+- [x] Offline, hardened production Compose, and disposable Kubernetes validation
+- [x] Backup/isolated restore, reconciliation, and prior-schema upgrade rehearsal
+- [x] Security, licensing, secret, accessibility, and dependency gates
+- [x] Real light-mode screenshots, editable diagrams, docs build, and link checks
+- [ ] Published release/package/image/chart verification
 
 ## Current blocking set
 
-- Browser OIDC authorization-code + PKCE sessions/login/logout and SCIM lifecycle.
-- Cross-workspace/field authorization matrix and PostgreSQL RLS defense in depth.
-- Complete UI model/config export/import workflow across workspaces.
-- Durable extraction interruption, delta handoff, ambiguous publication timeout,
-  and stale-worker/dependency failure injection.
-- Previous-schema upgrade, disconnected install, production Compose startup,
-  disposable Kubernetes install, HA exercise, and native amd64 build/scan.
-- Clean-machine docs quickstart plus signed/provenanced registry/package/chart
-  publication and consumer verification.
+- Publish and verify the exact tagged multi-architecture candidate images,
+  source archive, Helm chart, SDK/ecosystem packages, offline docs archive,
+  checksums, SBOM, signatures, and GitHub attestations.
+- Promote final evidence only after those postpublication checks pass.
 
-The final native-arm64 API and web images have zero Trivy high or critical findings;
-Gitleaks found no secrets. The high-impact application completeness findings in
-`security_best_practices_report.md` remain release blockers and are not waived.
+Native-arm64 API and web images, the repository tree, and npm dependencies have
+no detected high or critical finding in the current scans. The remaining risks
+in `security_best_practices_report.md` are medium/low alpha limitations; none is
+silently waived as a high/critical finding.
 
 Live compatibility with credentialed SAP, Salesforce, Dynamics, Databricks,
-Fabric, Azure Blob, and Google Cloud Storage is expected to remain BLOCKED when
-credentials are unavailable; recipes and contract tests do not change that
-validation level.
+Fabric, S3, Azure Blob, and Google Cloud Storage remains unverified because
+authorized vendor credentials were not supplied. Recipes and contract tests do
+not change that validation level. DNS connection pinning, privileged-DB tamper
+resistance, broader cluster/performance workloads, and HA failover also remain
+explicit limitations rather than production-readiness claims.

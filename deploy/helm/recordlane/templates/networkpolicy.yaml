@@ -6,7 +6,7 @@ spec:
   podSelector: {matchLabels: {app.kubernetes.io/name: recordlane}}
   policyTypes: [Ingress, Egress]
   ingress:
-    - ports: [{protocol: TCP, port: 8000}]
+    - ports: [{protocol: TCP, port: 8000}, {protocol: TCP, port: 8080}]
   egress:
     - to: [{namespaceSelector: {}}]
       ports: [{protocol: UDP, port: 53}, {protocol: TCP, port: 53}]
@@ -14,4 +14,3 @@ spec:
     - to: [{ipBlock: {cidr: {{ . | quote }}}}]
     {{- end }}
 {{- end }}
-

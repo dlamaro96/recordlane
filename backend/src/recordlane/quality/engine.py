@@ -5,7 +5,6 @@ from typing import Any
 
 from recordlane.policy import CompiledPolicy, compile_policy
 
-
 SPACE = re.compile(r"\s+")
 
 
@@ -13,7 +12,9 @@ def normalize_text(value: str) -> str:
     return SPACE.sub(" ", unicodedata.normalize("NFKC", value).strip()).casefold()
 
 
-def normalize_record(values: dict[str, Any], policy: CompiledPolicy | dict[str, Any] | None = None) -> dict[str, Any]:
+def normalize_record(
+    values: dict[str, Any], policy: CompiledPolicy | dict[str, Any] | None = None
+) -> dict[str, Any]:
     if policy is not None:
         runtime = policy if isinstance(policy, CompiledPolicy) else compile_policy(policy)
         return runtime.normalize(values)

@@ -1,14 +1,17 @@
 {
   "$schema":"https://json-schema.org/draft/2020-12/schema",
   "type":"object",
-  "required":["image","database","oidc","sessionSecret","masterKey"],
+  "required":["image","database","oidc","sessionSecret","masterKey","scimToken","metricsToken","publicUrl","probeHost","allowedOrigins","allowedHosts"],
   "properties":{
     "replicaCount":{"type":"integer","minimum":1},
     "workerReplicaCount":{"type":"integer","minimum":1},
     "image":{"type":"object","required":["api","web","tag"],"properties":{"api":{"type":"string","minLength":1},"web":{"type":"string","minLength":1},"tag":{"type":"string","pattern":"^[0-9]+\\.[0-9]+\\.[0-9]+(-[a-z0-9.]+)?$"},"pullPolicy":{"enum":["Always","IfNotPresent","Never"]}}},
-    "database":{"type":"object","required":["secretName","urlKey"],"properties":{"secretName":{"type":"string","minLength":1},"urlKey":{"type":"string","minLength":1}}},
-    "oidc":{"type":"object","required":["issuer","audience"],"properties":{"issuer":{"type":"string"},"audience":{"type":"string","minLength":1}}},
-    "sessionSecret":{"type":"object"},"masterKey":{"type":"object"},"ingress":{"type":"object"},"resources":{"type":"object"},"networkPolicy":{"type":"object"}
+    "database":{"type":"object","required":["secretName","urlKey","migrationSecretName","migrationUrlKey"],"properties":{"secretName":{"type":"string","minLength":1},"urlKey":{"type":"string","minLength":1},"migrationSecretName":{"type":"string","minLength":1},"migrationUrlKey":{"type":"string","minLength":1}}},
+    "oidc":{"type":"object","required":["issuer","audience","clientId"],"properties":{"issuer":{"type":"string"},"audience":{"type":"string","minLength":1},"clientId":{"type":"string","minLength":1}}},
+    "publicUrl":{"type":"string","pattern":"^https://"},
+    "probeHost":{"type":"string","minLength":1},
+    "allowedOrigins":{"type":"string","minLength":4},
+    "allowedHosts":{"type":"string","minLength":4},
+    "sessionSecret":{"type":"object"},"masterKey":{"type":"object"},"scimToken":{"type":"object"},"metricsToken":{"type":"object"},"ingress":{"type":"object"},"resources":{"type":"object"},"networkPolicy":{"type":"object"}
   }
 }
-

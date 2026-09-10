@@ -3,9 +3,25 @@ updates:
   - package-ecosystem: pip
     directory: /backend
     schedule: {interval: weekly}
+    open-pull-requests-limit: 2
+    groups:
+      python-runtime:
+        dependency-type: production
+      python-tooling:
+        dependency-type: development
   - package-ecosystem: npm
     directory: /apps/web
     schedule: {interval: weekly}
+    open-pull-requests-limit: 2
+    groups:
+      web-runtime:
+        dependency-type: production
+      web-tooling:
+        dependency-type: development
   - package-ecosystem: github-actions
     directory: /
     schedule: {interval: weekly}
+    open-pull-requests-limit: 1
+    groups:
+      workflow-actions:
+        patterns: ["*"]

@@ -13,7 +13,7 @@ def main() -> None:
         "X-Recordlane-Workspace": "demo",
     }
     with httpx.Client(timeout=10.0) as client:
-        for attempt in range(30):
+        for _attempt in range(30):
             try:
                 if client.get("http://api:8000/health/ready").is_success:
                     break
@@ -24,15 +24,38 @@ def main() -> None:
             raise RuntimeError("Recordlane API did not become ready")
         cursor = None
         while True:
-            page = client.get(source, params={"cursor": cursor} if cursor is not None else {}).raise_for_status().json()
-            records = [{
-                "local_id": item.pop("id"),
-                "version": str(item.pop("version")),
-                "values": item,
-                "verification": {"tax_id": True},
-            } for item in page["items"]]
+            page = (
+                client.get(source, params={"cursor": cursor} if cursor is not None else {})
+                .raise_for_status()
+                .json()
+            )
+            records = [
+                {
+                    "local_id": item.pop("id"),
+                    "version": str(item.pop("version")),
+                    "values": item,
+                    "verification": {"tax_id": True},
+                }
+                for item in page["items"]
+            ]
             if records:
-                response = client.post(f"{api}/sources/vendor-http/ingest", headers=headers, json={"domain": "supplier", "records": records, "complete_snapshot": page["snapshot_complete"]})
+                response = client.post(
+                    f"{api}/sources/vendor-http/ingest",
+                    headers=headers,
+                    json={
+                        "domain": "supplier",
+                        "records": records,
+                        "run_id": "demo-http-snapshot-v1",
+                        "extraction_mode": "full",
+                        "page_cursor": str(cursor) if cursor is not None else None,
+                        "next_cursor": (
+                            str(page["next_cursor"]) if page["next_cursor"] is not None else None
+                        ),
+                        "snapshot_position": "synthetic-v1",
+                        "complete_snapshot": page["snapshot_complete"],
+                        "source_complete": page["snapshot_complete"],
+                    },
+                )
                 response.raise_for_status()
             cursor = page["next_cursor"]
             if cursor is None:
@@ -41,4 +64,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

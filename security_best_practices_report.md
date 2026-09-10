@@ -1,22 +1,10 @@
 # Recordlane security best-practices review
 
-Reviewed 2026-09-09 against the FastAPI, general browser JavaScript, and React guidance bundled with Codex. Scope includes application code and shipped Compose/Helm configuration. No independent penetration test was performed.
+Reviewed 2026-09-10 against the FastAPI, general browser JavaScript, and React guidance bundled with Codex. Scope includes application code and shipped Compose/Helm configuration. No independent penetration test was performed.
 
 ## Executive summary
 
-No known package vulnerability rated high or critical is being waived in the final local images. Gitleaks found no secrets, and Trivy found zero high or critical vulnerabilities in both rebuilt native-arm64 images. During the review, GitHub Dependabot identified high-severity Python dependency advisories; the affected direct dependencies were upgraded to fixed releases and the images were rebuilt and rescanned. The API centralizes authentication, validates OIDC JWT signature/issuer/audience and workspace claims, applies workspace predicates, rejects insecure production settings, ships non-root/read-only containers, uses strict CORS/host/CSP headers, and has no raw-HTML/eval frontend sinks. One high-severity completeness gap—missing browser OIDC authorization-code/PKCE sessions—blocks a production release. Other residual findings below remain explicit alpha limitations.
-
-## High
-
-### SEC-001 — Production browser authentication flow is absent
-
-- Rule: FASTAPI-AUTH-001 / OIDC session baseline
-- Location: `backend/src/recordlane/auth/principal.py:43`; `apps/web/src/api.ts:19`
-- Evidence: production supports bearer validation, while the browser has no login/callback/logout BFF and its demo headers are ignored outside demo mode.
-- Impact: the packaged production web UI cannot establish a secure interactive user session, tempting operators to create unsupported token workarounds.
-- Fix: implement maintained authorization-code + PKCE BFF sessions with state/nonce, exact redirect, server-side token storage, secure cookie expiry/logout, rotation and revocation tests.
-- Mitigation: use only supported OIDC service bearer clients for direct API evaluation; do not expose the UI as production-ready.
-- Status: **BLOCKED RELEASE GATE; not waived.**
+No known package vulnerability rated high or critical is being waived in the current local images. Gitleaks scanned both history and the complete working directory with no secrets, npm audit found no high vulnerability, and Trivy found no high or critical vulnerability or configuration finding in the source tree. Current API/web image reports are retained beside that evidence. The API centralizes authentication, authorization, field filtering, and workspace scope; uses browser OIDC authorization-code/PKCE sessions and scoped service credentials; enforces PostgreSQL RLS under a restricted runtime role; rejects insecure production settings; ships non-root/read-only containers; uses strict CORS/host/CSP headers; and has no raw-HTML/eval frontend sinks. Residual medium and low risks below remain explicit alpha limitations.
 
 ## Medium
 
@@ -40,15 +28,12 @@ No known package vulnerability rated high or critical is being waived in the fin
 - Mitigation: restricted DB administration, protected backups, and exported chain-head monitoring.
 - Status: open alpha limitation; documentation never calls the log immutable.
 
-### SEC-004 — Field-level authorization and PostgreSQL RLS are incomplete
+### SEC-004 — Field-level authorization and PostgreSQL RLS
 
 - Rule: FASTAPI-AUTHZ-001
-- Location: `backend/src/recordlane/api/routes.py:85`, `:94`, and `:109`; `backend/src/recordlane/models/tables.py:1`
-- Evidence: workspace and action roles are enforced, but arbitrary per-attribute masking and database row-level-security policies are not implemented.
-- Impact: an authorized workspace reader sees all non-secret mastered/source attributes returned by a route; an application query regression would lack DB-level defense in depth.
-- Fix: add schema-driven field policies, response shaping tests, dedicated runtime DB roles, and PostgreSQL RLS keyed to transaction-local workspace context.
-- Mitigation: do not ingest restricted attributes requiring field-specific entitlements in this alpha.
-- Status: open alpha limitation.
+- Location: `backend/src/recordlane/api/routes.py`; `backend/src/recordlane/auth/principal.py`; `backend/src/recordlane/operations/migrate.py`
+- Evidence: field policy shapes entity, evidence, export, preview, filter, assistant, and relationship surfaces; PostgreSQL policies key off transaction-local workspace context; a non-owner, non-superuser runtime role is exercised with pooled connections.
+- Status: corrected and regression-tested in `tests/integration/test_field_authorization.py` and `tests/integration/test_postgres_rls.py`.
 
 ## Low / hardening
 
@@ -64,10 +49,14 @@ No known package vulnerability rated high or critical is being waived in the fin
 
 ## Controls corrected during review
 
+- Browser login/callback/logout uses authorization code with PKCE, state and nonce; tokens stay encrypted in server-side sessions.
+- SCIM deprovisioning, expired sessions, issuer failure, key rotation, and service credential rotation/revocation fail closed in integration tests.
+- Field authorization and PostgreSQL RLS protect alternate read surfaces and pooled connections.
+- Named encrypted-local and Vault secret references replace inline secret values; test/list responses never disclose plaintext.
 - Production OpenAPI/Swagger/ReDoc are disabled.
 - Trusted host validation and explicit production host preflight are enabled.
 - The web proxy sends CSP, clickjacking, MIME-sniffing, referrer, and permissions headers.
 - Unknown hash routes are allowlisted instead of driving privileged UI selection.
 - The container UI uses same-origin API routing and contains no browser secrets.
 - SSRF validation blocks URL credentials, unapproved hosts, redirects, metadata endpoints, and unapproved private networks.
-- Exact scan reports are retained at `docs/evidence/2026-09-09/security/`; both final local image reports contain zero high or critical findings. This result is arm64-only and does not stand in for the blocked amd64/multi-architecture gate.
+- Exact scan reports are retained at `docs/evidence/2026-09-09/security/`. Native-arm64 image evidence does not stand in for an amd64 or published-registry scan.

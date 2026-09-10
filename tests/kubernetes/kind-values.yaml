@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: Apache-2.0
+# Disposable-cluster values. Credentials are synthetic and supplied as Kubernetes Secrets.
+replicaCount: 1
+workerReplicaCount: 1
+image:
+  api: recordlane-api
+  web: recordlane-web
+  tag: 0.1.0-alpha.1
+  pullPolicy: Never
+database:
+  secretName: recordlane-database
+  urlKey: database-url
+  migrationSecretName: recordlane-migration-database
+  migrationUrlKey: database-url
+oidc:
+  issuer: https://identity.invalid/realms/recordlane
+  audience: recordlane-api
+  clientId: recordlane
+publicUrl: https://recordlane.local
+probeHost: recordlane.local
+allowedOrigins: '["https://recordlane.local"]'
+allowedHosts: '["recordlane.local","api","localhost","127.0.0.1"]'
+sessionSecret: {secretName: recordlane-session, key: session-secret}
+masterKey: {secretName: recordlane-master-key, key: master-key}
+scimToken: {secretName: recordlane-scim, key: scim-token}
+metricsToken: {secretName: recordlane-metrics, key: metrics-token}
+ingress: {enabled: false}
+networkPolicy: {enabled: false, allowedEgressCIDRs: []}

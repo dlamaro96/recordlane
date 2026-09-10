@@ -12,4 +12,3 @@ def test_normalization_is_idempotent(value: str):
 def test_arabic_and_diacritics_are_preserved():
     assert "الميناء" in normalize_text(" شركة الميناء ")
     assert normalize_text("Málaga") == "málaga"
-

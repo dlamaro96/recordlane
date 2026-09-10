@@ -27,7 +27,9 @@
               "type": {"enum": ["string", "integer", "decimal", "boolean", "date", "datetime", "reference"]},
               "required": {"type": "boolean"}, "allowedValues": {"type": "array"}, "allowed_values": {"type": "array"},
               "pattern": {"type": "string", "maxLength": 256},
-              "normalizer": {"enum": ["preserve", "uppercase_trim", "unicode_casefold"]}
+              "normalizer": {"enum": ["preserve", "uppercase_trim", "unicode_casefold"]},
+              "read_roles": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+              "write_roles": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
             }
           }
         },
@@ -66,7 +68,9 @@
               "required": ["field", "comparator", "weight"], "properties": {
                 "field": {"type": "string"}, "comparator": {"enum": ["exact", "sequence_ratio"]},
                 "weight": {"type": "number", "exclusiveMinimum": 0},
-                "missing_score": {"type": "number", "minimum": 0, "maximum": 1}
+                "missing_score": {"type": "number", "minimum": 0, "maximum": 1},
+                "m_probability": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+                "u_probability": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1}
               }}},
             "thresholds": {"type": "object", "additionalProperties": false, "required": ["review", "auto_link"], "properties": {
               "review": {"type": "number", "minimum": 0, "maximum": 1},
@@ -75,6 +79,8 @@
             "auto_link": {"type": "number", "minimum": 0, "maximum": 1},
             "review": {"type": "number", "minimum": 0, "maximum": 1},
             "hard_conflicts": {"type": "array", "items": {"type": "string"}}
+            ,"algorithm": {"enum": ["weighted_score", "fellegi_sunter"]}
+            ,"prior_match_probability": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1}
           }
         },
         "survivorship": {"type": "object", "additionalProperties": {"oneOf": [

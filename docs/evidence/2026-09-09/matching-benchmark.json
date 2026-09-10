@@ -1,22 +1,25 @@
 {
-  "generated_at": "2026-09-09",
-  "workload": "10,000 deterministic normalized synthetic labeled pairs; 50% near-duplicate, 50% hard-identifier-distinct",
+  "generated_at": "2026-09-10",
+  "workload": "100,000 normalized synthetic source records in 50,000 labeled comparisons; 50% near-duplicate, 50% hard-identifier-distinct; skewed common-name prefixes",
   "seed": 741902,
   "hardware": "macOS-15.5-arm64-arm-64bit-Mach-O",
   "python": "3.14.5",
-  "elapsed_seconds": 0.1589,
-  "pairs_per_second": 62932.76,
+  "elapsed_seconds": 1.691033,
+  "source_records_per_second": 59135.44,
+  "comparisons_per_second": 29567.72,
+  "process_peak_rss_bytes": 132415488,
   "confusion_matrix": {
-    "true_positive": 5000,
-    "true_negative": 5000,
+    "true_positive": 25000,
+    "true_negative": 25000,
     "false_positive": 0,
     "false_negative": 0
   },
-  "accuracy": 1.0,
+  "pairwise_accuracy": 1.0,
+  "targets_file": "matching-benchmark-targets.json",
   "limitations": [
-    "single-process in-memory comparison only",
-    "synthetic names are not representative production data",
-    "no database candidate-generation or concurrency included",
-    "not a competitor comparison or capacity guarantee"
+    "single-process in-memory normalization/comparison only",
+    "synthetic labels are not representative production data",
+    "database candidate generation, API latency, and concurrency are excluded",
+    "not a competitor comparison, capacity guarantee, or real-world precision claim"
   ]
 }

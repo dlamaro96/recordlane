@@ -11,15 +11,50 @@
     "directAccessGrantsEnabled": false,
     "redirectUris": ["http://127.0.0.1:8088/*"],
     "webOrigins": ["http://127.0.0.1:8088"],
-    "attributes": {"pkce.code.challenge.method": "S256"}
+    "attributes": {"pkce.code.challenge.method": "S256"},
+    "protocolMappers": [
+      {
+        "name": "recordlane workspace",
+        "protocol": "openid-connect",
+        "protocolMapper": "oidc-usermodel-attribute-mapper",
+        "consentRequired": false,
+        "config": {
+          "user.attribute": "recordlane_workspace",
+          "claim.name": "recordlane_workspace",
+          "jsonType.label": "String",
+          "id.token.claim": "true",
+          "access.token.claim": "true",
+          "userinfo.token.claim": "true"
+        }
+      },
+      {
+        "name": "recordlane API audience",
+        "protocol": "openid-connect",
+        "protocolMapper": "oidc-audience-mapper",
+        "consentRequired": false,
+        "config": {
+          "included.client.audience": "recordlane-api",
+          "id.token.claim": "false",
+          "access.token.claim": "true"
+        }
+      }
+    ]
+  }, {
+    "clientId": "recordlane-api",
+    "bearerOnly": true,
+    "standardFlowEnabled": false,
+    "directAccessGrantsEnabled": false
   }],
   "users": [{
     "username": "demo-steward",
     "enabled": true,
+    "email": "demo-steward@recordlane.invalid",
+    "firstName": "Demo",
+    "lastName": "Steward",
     "emailVerified": true,
-    "realmRoles": ["steward"],
+    "requiredActions": [],
+    "realmRoles": ["administrator", "steward"],
     "attributes": {"recordlane_workspace": ["demo"]},
-    "credentials": [{"type":"password","value":"demo-steward-change-me","temporary":true}]
+    "credentials": [{"type":"password","value":"demo-steward-change-me","temporary":false}]
   }]
 }
-

@@ -3,18 +3,18 @@
   "Trivy": {
     "Version": "0.74.0"
   },
-  "ReportID": "01a08690-1486-7c11-a862-fe6173f31f4f",
-  "CreatedAt": "2026-09-09T18:26:24.518792+04:00",
-  "ArtifactID": "sha256:5a3db9ea05317899ddfa8bbb1e665f820a65c3f8c9f291083a7d68346e48847e",
+  "ReportID": "01a08a91-ac1f-7c63-8a88-a29177ac0dcf",
+  "CreatedAt": "2026-09-10T13:06:37.727814+04:00",
+  "ArtifactID": "sha256:d0a517ceee910400dc258c91bb808b391ee61fd67b1f282bea5371e3b4a91519",
   "ArtifactName": "recordlane-demo-web:latest",
   "ArtifactType": "container_image",
   "Metadata": {
-    "Size": 69900800,
+    "Size": 69943296,
     "OS": {
       "Family": "alpine",
       "Name": "3.22.1"
     },
-    "ImageID": "sha256:0eb342db5f369fd6f90074a6a7a244cc8c1559fabd06c3da06862c8a3dab2fab",
+    "ImageID": "sha256:2c7469d008ce037ea3f659924f23dfe8b8fb483fbb345be5704acebf8cee49c1",
     "DiffIDs": [
       "sha256:0b83d017db6efafadf6b3f18d087d2ce1d67d8f0e927dc7254b0ad088074cd3a",
       "sha256:488c372ba3256e07c09fa9b9510c4f24baeb7352b68006ac328bef4d32d299d8",
@@ -25,20 +25,20 @@
       "sha256:5eb2b5468732ecb9fccb799d91f630da80fcd8093971350b619f31f841b8ea0d",
       "sha256:52525aad6e4f256604bb6568ccc6c218142e37f993a3caf3c4cbe9947944bdb2",
       "sha256:981e2ed4eada816e7266abe87d4b108d76b086603f4ba4e9c98801a8c3b7265f",
-      "sha256:7a5aafc2a9db80bcd94d6afc184d9fbe439711da7270dd393a155f3e6ae02e35",
-      "sha256:e4c6425537279723736570b98d436550d81f447ac0ccf512ab8004c314c283ec",
-      "sha256:3f3e4f5ce11d73be7b09d0af051e0ae3f9679d5da65cc9ec32dcb6895d748750"
+      "sha256:edd11e86dd7d17ea25443197e98722713e680e0073fdbaefd9d0c160d8437ffb",
+      "sha256:ba039e2e2ed7d0eaae9597e760aaa6a53f559b70ec914206a13b9501b2027bcd",
+      "sha256:65437473d3293e81f8baf31475274182426b0b5b4640f870246e3d87614542ba"
     ],
     "RepoTags": [
       "recordlane-demo-web:latest"
     ],
     "RepoDigests": [
-      "recordlane-demo-web@sha256:0eb342db5f369fd6f90074a6a7a244cc8c1559fabd06c3da06862c8a3dab2fab"
+      "recordlane-demo-web@sha256:2c7469d008ce037ea3f659924f23dfe8b8fb483fbb345be5704acebf8cee49c1"
     ],
     "Reference": "recordlane-demo-web:latest",
     "ImageConfig": {
       "architecture": "arm64",
-      "created": "2026-09-09T18:06:02.076213425+04:00",
+      "created": "2026-09-10T12:08:40.890842257+04:00",
       "history": [
         {
           "created": "2025-07-15T11:01:16Z",
@@ -158,34 +158,34 @@
           "comment": "buildkit.dockerfile.v0"
         },
         {
-          "created": "2026-09-09T13:55:59Z",
+          "created": "2026-09-09T16:29:02Z",
           "created_by": "COPY nginx.conf /etc/nginx/conf.d/default.conf # buildkit",
           "comment": "buildkit.dockerfile.v0"
         },
         {
-          "created": "2026-09-09T14:06:01Z",
+          "created": "2026-09-10T08:08:40Z",
           "created_by": "COPY /src/dist /usr/share/nginx/html # buildkit",
           "comment": "buildkit.dockerfile.v0"
         },
         {
-          "created": "2026-09-09T14:06:02Z",
+          "created": "2026-09-10T08:08:40Z",
           "created_by": "RUN /bin/sh -c chown -R nginx:nginx /var/cache/nginx /var/run /usr/share/nginx/html \u0026\u0026     sed -i 's/user  nginx;/user nginx;/; s#pid .*;#pid /tmp/nginx.pid;#' /etc/nginx/nginx.conf # buildkit",
           "comment": "buildkit.dockerfile.v0"
         },
         {
-          "created": "2026-09-09T14:06:02Z",
+          "created": "2026-09-10T08:08:40Z",
           "created_by": "USER nginx",
           "comment": "buildkit.dockerfile.v0",
           "empty_layer": true
         },
         {
-          "created": "2026-09-09T14:06:02Z",
+          "created": "2026-09-10T08:08:40Z",
           "created_by": "EXPOSE map[8080/tcp:{}]",
           "comment": "buildkit.dockerfile.v0",
           "empty_layer": true
         },
         {
-          "created": "2026-09-09T14:06:02Z",
+          "created": "2026-09-10T08:08:40Z",
           "created_by": "HEALTHCHECK \u0026{[\"CMD\" \"wget\" \"-qO-\" \"http://127.0.0.1:8080/\"] \"20s\" \"3s\" \"0s\" \"0s\" '\\x05'}",
           "comment": "buildkit.dockerfile.v0",
           "empty_layer": true
@@ -204,9 +204,9 @@
           "sha256:5eb2b5468732ecb9fccb799d91f630da80fcd8093971350b619f31f841b8ea0d",
           "sha256:52525aad6e4f256604bb6568ccc6c218142e37f993a3caf3c4cbe9947944bdb2",
           "sha256:981e2ed4eada816e7266abe87d4b108d76b086603f4ba4e9c98801a8c3b7265f",
-          "sha256:7a5aafc2a9db80bcd94d6afc184d9fbe439711da7270dd393a155f3e6ae02e35",
-          "sha256:e4c6425537279723736570b98d436550d81f447ac0ccf512ab8004c314c283ec",
-          "sha256:3f3e4f5ce11d73be7b09d0af051e0ae3f9679d5da65cc9ec32dcb6895d748750"
+          "sha256:edd11e86dd7d17ea25443197e98722713e680e0073fdbaefd9d0c160d8437ffb",
+          "sha256:ba039e2e2ed7d0eaae9597e760aaa6a53f559b70ec914206a13b9501b2027bcd",
+          "sha256:65437473d3293e81f8baf31475274182426b0b5b4640f870246e3d87614542ba"
         ]
       },
       "config": {
@@ -300,19 +300,19 @@
         "DiffID": "sha256:981e2ed4eada816e7266abe87d4b108d76b086603f4ba4e9c98801a8c3b7265f"
       },
       {
-        "Size": 4608,
-        "Digest": "sha256:9112711bc495c9d4d9a8f15b34ae6dca271b4bc57c7a6932b298752403cdf38a",
-        "DiffID": "sha256:7a5aafc2a9db80bcd94d6afc184d9fbe439711da7270dd393a155f3e6ae02e35"
+        "Size": 5120,
+        "Digest": "sha256:82ff1d3d6e36e921200121a4e0b4a09e6a0cff444c72f45d7633aadcdaf409e2",
+        "DiffID": "sha256:edd11e86dd7d17ea25443197e98722713e680e0073fdbaefd9d0c160d8437ffb"
       },
       {
-        "Size": 406528,
-        "Digest": "sha256:5c7bd2dce9760facb76e3816178c96c4ef5b7e2d1f39e6232e1be4db009b9dbf",
-        "DiffID": "sha256:e4c6425537279723736570b98d436550d81f447ac0ccf512ab8004c314c283ec"
+        "Size": 427520,
+        "Digest": "sha256:13183d11fefd0f6c4fc6f29b41555ef07adcc1b9cfa06a78f4bcf73a5905e9db",
+        "DiffID": "sha256:ba039e2e2ed7d0eaae9597e760aaa6a53f559b70ec914206a13b9501b2027bcd"
       },
       {
-        "Size": 412160,
-        "Digest": "sha256:67bb0ca321c19045fb3c36f698fe53fae93a3829ceee9839dfb38f104166528a",
-        "DiffID": "sha256:3f3e4f5ce11d73be7b09d0af051e0ae3f9679d5da65cc9ec32dcb6895d748750"
+        "Size": 433152,
+        "Digest": "sha256:93cde0a1da72a0c6178ee72a616c835d0fad1dd38f638761c23547df33409ade",
+        "DiffID": "sha256:65437473d3293e81f8baf31475274182426b0b5b4640f870246e3d87614542ba"
       }
     ]
   },

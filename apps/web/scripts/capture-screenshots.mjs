@@ -12,12 +12,13 @@ const browser=await chromium.launch(); const page=await browser.newPage({viewpor
 const errors=[]; page.on('console',message=>{if(message.type()==='error')errors.push(message.text())});
 const captures=[];
 for(const route of routes){
-  await page.goto(`${base}/#/${route}`,{waitUntil:'networkidle'}); await page.locator('h1').waitFor();
+  await page.goto(`${base}/?capture=${route}#/${route}`,{waitUntil:'networkidle'}); await page.locator('h1').waitFor();
+  if(route==='corrections') await page.waitForFunction(()=>document.querySelector('[aria-label="Contribution to split"]')?.options.length);
   await page.evaluate(()=>localStorage.setItem('rl-theme','light'));
   const path=resolve(output,`${route}-light-1440.png`); await page.screenshot({path,fullPage:true});
   captures.push(path);
 }
-await page.setViewportSize({width:390,height:844}); await page.evaluate(()=>localStorage.setItem('rl-theme','light')); await page.goto(`${base}/#/master`,{waitUntil:'networkidle'});
+await page.setViewportSize({width:390,height:844}); await page.evaluate(()=>localStorage.setItem('rl-theme','light')); await page.goto(`${base}/?capture=master-mobile#/master`,{waitUntil:'networkidle'});
 const dimensions=await page.evaluate(()=>({clientWidth:document.documentElement.clientWidth,scrollWidth:document.documentElement.scrollWidth}));
 if(dimensions.scrollWidth>dimensions.clientWidth) throw new Error(`mobile overflow: ${JSON.stringify(dimensions)}`);
 const narrow=resolve(output,'master-light-390.png'); await page.screenshot({path:narrow,fullPage:true}); captures.push(narrow);

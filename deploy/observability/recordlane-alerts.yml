@@ -1,0 +1,21 @@
+groups:
+  - name: recordlane
+    rules:
+      - alert: RecordlanePublicationStale
+        expr: sum(recordlane_outbox_backlog{status=~"pending|retry|reconcile"}) > 0
+        for: 15m
+        labels: {severity: warning}
+        annotations:
+          summary: Publication events have not reached a verified consumer state
+      - alert: RecordlaneDurableJobsFailing
+        expr: sum(recordlane_job_backlog{status="failed"}) > 0
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: One or more durable jobs are terminally failed
+      - alert: RecordlaneApiErrorRate
+        expr: sum(rate(recordlane_http_requests_total{status=~"5.."}[5m])) > 0.1
+        for: 10m
+        labels: {severity: critical}
+        annotations:
+          summary: Recordlane API 5xx rate is elevated

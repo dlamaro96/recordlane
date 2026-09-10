@@ -7,7 +7,6 @@ from recordlane.mastering.service import MasteringService
 from recordlane.models.tables import Domain, Entity, Relationship, ReviewTask, Source, Workspace
 from recordlane.schemas import IncomingRecord
 
-
 SUPPLIER_DEFINITION = {
     "entity": "supplier",
     "attributes": [
@@ -24,6 +23,8 @@ SUPPLIER_DEFINITION = {
             "type": "identifier",
             "pattern": "[A-Z]{2}[0-9]{3,12}",
             "normalizer": "uppercase_trim",
+            "read_roles": ["administrator", "steward", "approver", "auditor"],
+            "write_roles": ["administrator", "integration_operator", "steward"],
         },
         {
             "key": "email",
@@ -72,6 +73,32 @@ SUPPLIER_DEFINITION = {
 def seed_demo(db: Session) -> dict:
     existing = db.scalar(select(Workspace).where(Workspace.slug == "demo"))
     if existing:
+        expected_configs = {
+            "erp-postgres": {
+                "secret_ref": "env:RECORDLANE_DEMO_ERP_DSN",
+                "query": "select * from synthetic_suppliers",
+                "cursor_columns": ["updated_at", "id"],
+            },
+            "vendor-http": {
+                "base_url": "http://demo-source:8081",
+                "allowed_hosts": ["demo-source"],
+                "allow_private": True,
+                "pagination": "cursor",
+                "test_path": "/health",
+                "resource_path": "/v1/suppliers",
+            },
+            "steward-csv": {
+                "path": "/data/steward-suppliers.csv",
+                "encoding": "utf-8",
+            },
+        }
+        changed = False
+        for source in db.scalars(select(Source).where(Source.workspace_id == existing.id)):
+            if source.key in expected_configs and source.config != expected_configs[source.key]:
+                source.config = expected_configs[source.key]
+                changed = True
+        if changed:
+            db.commit()
         return {"workspace_id": existing.id, "seeded": False}
     workspace = Workspace(slug="demo", name="Meridian Works — Synthetic Demo")
     db.add(workspace)
@@ -126,6 +153,11 @@ def seed_demo(db: Session) -> dict:
                     "deletions": "tombstones",
                     "validation": "local-integration",
                 },
+                config={
+                    "secret_ref": "env:RECORDLANE_DEMO_ERP_DSN",
+                    "query": "select * from synthetic_suppliers",
+                    "cursor_columns": ["updated_at", "id"],
+                },
                 checkpoint={},
             ),
             Source(
@@ -140,6 +172,14 @@ def seed_demo(db: Session) -> dict:
                     "incremental": "cursor",
                     "deletions": "events",
                     "validation": "local-integration",
+                },
+                config={
+                    "base_url": "http://demo-source:8081",
+                    "allowed_hosts": ["demo-source"],
+                    "allow_private": True,
+                    "pagination": "cursor",
+                    "test_path": "/health",
+                    "resource_path": "/v1/suppliers",
                 },
                 checkpoint={},
             ),
@@ -156,6 +196,7 @@ def seed_demo(db: Session) -> dict:
                     "deletions": "explicit",
                     "validation": "integration",
                 },
+                config={"path": "/data/steward-suppliers.csv", "encoding": "utf-8"},
                 checkpoint={},
             ),
         ]

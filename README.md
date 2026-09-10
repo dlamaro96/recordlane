@@ -21,10 +21,11 @@ open http://127.0.0.1:8088
 
 The loopback demo contains only fictional supplier data. It starts PostgreSQL,
 the API, web app, Keycloak, a paginated HTTP source, and an idempotent outbound
-consumer. The current alpha UI uses an isolated loopback demo identity path;
-the bundled Keycloak realm is packaged for OIDC validation. Production
-preflight rejects demo mode, missing OIDC, SQLite, weak session secrets, and
-wildcard CORS.
+consumer. The loopback role switcher is isolated to demo mode. The bundled
+Keycloak realm also runs the real authorization-code/PKCE browser flow used by
+production; tokens remain encrypted in server-side sessions and never enter UI
+JavaScript. Production preflight rejects demo mode, missing OIDC, SQLite, weak
+session secrets, and wildcard CORS.
 
 Ordinary `./recordlane down` preserves data. Demo removal is intentionally a
 separate, destructive operator action and is not performed by the CLI.
@@ -42,7 +43,11 @@ separate, destructive operator action and is not performed by the CLI.
   checks, stale-decision rejection, chained audit entries, and transactional
   outbox writes.
 - Configuration checksums and data-checkpoint-bound impact simulation.
-- Real, role-aware API state across 15 operational screens.
+- Real, role-aware API state across 15 light-first responsive workspaces.
+- SCIM users/groups and session revocation, scoped one-time service credentials,
+  field-aware authorization, PostgreSQL RLS, and named encrypted/Vault secrets.
+- Durable source connection tests, snapshot/delta recovery, signed publication
+  reconciliation, metrics/traces, and optional non-agentic assistant drafts.
 
 See [REQUIREMENTS.yaml](REQUIREMENTS.yaml) for validation level and blockers;
 [SPEC.md](SPEC.md) is the complete contract. Architecture, operations,

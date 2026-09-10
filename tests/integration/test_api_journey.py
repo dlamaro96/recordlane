@@ -22,8 +22,29 @@ def test_seeded_mastering_journey_is_real_state():
         assert contradictory["entity_id"] != canonical["entity_id"]
 
         entities = client.get("/api/v1/entities?domain=supplier").json()
-        northstar = next(e for e in entities if e["master"] and e["master"]["values"].get("tax_id") == "US00184")
+        northstar = next(
+            e
+            for e in entities
+            if e["master"] and e["master"]["values"].get("tax_id") == "US00184"
+        )
         assert northstar["master"]["provenance"]["tax_id"]["verification"] == "verified"
+
+
+def test_quality_profile_measures_current_population_with_disclosed_scope():
+    with TestClient(app) as client:
+        response = client.get("/api/v1/quality/profile?domain=supplier")
+        assert response.status_code == 200, response.text
+        profile = response.json()
+        assert profile["scope"] == "full_population"
+        assert profile["sample_size"] == profile["population"]
+        assert profile["population"] > 0
+        assert 0 <= profile["required_completeness"] <= 1
+        assert profile["invalid_records"] == 1
+        assert {field["field"] for field in profile["fields"]} >= {
+            "name",
+            "country",
+            "tax_id",
+        }
 
 
 def test_read_only_role_cannot_read_audit_or_ingest():
@@ -31,7 +52,23 @@ def test_read_only_role_cannot_read_audit_or_ingest():
     with TestClient(app) as client:
         assert client.get("/api/v1/entities", headers=headers).status_code == 200
         assert client.get("/api/v1/audit", headers=headers).status_code == 403
-        assert client.post("/api/v1/sources/erp-postgres/ingest", headers=headers, json={"domain": "supplier", "records": [{"local_id": "blocked", "version": "1", "values": {"name": "Blocked"}}]}).status_code == 403
+        assert (
+            client.post(
+                "/api/v1/sources/erp-postgres/ingest",
+                headers=headers,
+                json={
+                    "domain": "supplier",
+                    "records": [
+                        {
+                            "local_id": "blocked",
+                            "version": "1",
+                            "values": {"name": "Blocked"},
+                        }
+                    ],
+                },
+            ).status_code
+            == 403
+        )
 
 
 def test_entities_cursor_pagination_is_stable_and_complete():
@@ -57,12 +94,23 @@ def test_entities_cursor_pagination_is_stable_and_complete():
 
 def test_concurrent_update_invalidates_bound_approval():
     with TestClient(app) as client, SessionLocal() as db:
-        task = db.scalar(select(ReviewTask).where(ReviewTask.kind == "master_approval", ReviewTask.status == "open"))
+        task = db.scalar(
+            select(ReviewTask).where(
+                ReviewTask.kind == "master_approval", ReviewTask.status == "open"
+            )
+        )
         assert task is not None
         entity = db.get(Entity, task.entity_id)
         entity.version += 1
         db.commit()
-        response = client.post(f"/api/v1/review-tasks/{task.id}/decision", headers={"X-Recordlane-Role": "approver", "X-Recordlane-User": "independent.approver"}, json={"decision": "approve", "reason": "Reviewed exact source evidence"})
+        response = client.post(
+            f"/api/v1/review-tasks/{task.id}/decision",
+            headers={
+                "X-Recordlane-Role": "approver",
+                "X-Recordlane-User": "independent.approver",
+            },
+            json={"decision": "approve", "reason": "Reviewed exact source evidence"},
+        )
         assert response.status_code == 409
         assert response.json()["detail"]["code"] == "stale_approval"
 
@@ -70,17 +118,22 @@ def test_concurrent_update_invalidates_bound_approval():
 def test_invalid_task_action_has_no_business_effect():
     headers = {"X-Recordlane-Role": "steward", "X-Recordlane-User": "careful.steward"}
     with TestClient(app) as client, SessionLocal() as db:
-        task = db.scalar(select(ReviewTask).where(
-            ReviewTask.kind == "master_approval",
-            ReviewTask.status == "open",
-        ))
+        task = db.scalar(
+            select(ReviewTask).where(
+                ReviewTask.kind == "master_approval",
+                ReviewTask.status == "open",
+            )
+        )
         entity = db.get(Entity, task.entity_id)
         before_version = entity.version
         before_outbox = len(db.scalars(select(OutboxEvent)).all())
         response = client.post(
             f"/api/v1/review-tasks/{task.id}/decision",
             headers=headers,
-            json={"decision": "link", "reason": "This action is invalid for a master approval"},
+            json={
+                "decision": "link",
+                "reason": "This action is invalid for a master approval",
+            },
         )
         assert response.status_code == 409
         assert response.json()["detail"]["code"] == "invalid_task_decision"

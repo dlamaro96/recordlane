@@ -2,9 +2,8 @@
 import csv
 import json
 from collections.abc import Iterator
-from pathlib import Path
-from typing import Any, TextIO
-
+from itertools import chain
+from typing import Any, BinaryIO, TextIO
 
 MAX_CELL_CHARS = 1_000_000
 
@@ -39,3 +38,62 @@ def safe_csv_value(value: Any) -> str:
         return "'" + text
     return text
 
+
+def write_csv(rows: Iterator[dict[str, Any]], stream: TextIO) -> int:
+    iterator = iter(rows)
+    try:
+        first = next(iterator)
+    except StopIteration:
+        return 0
+    fields = list(first)
+    writer = csv.DictWriter(stream, fieldnames=fields, extrasaction="raise")
+    writer.writeheader()
+    count = 0
+    for row in chain((first,), iterator):
+        writer.writerow({key: safe_csv_value(row.get(key)) for key in fields})
+        count += 1
+    return count
+
+
+def write_jsonl(rows: Iterator[dict[str, Any]], stream: TextIO) -> int:
+    count = 0
+    for row in rows:
+        stream.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
+        count += 1
+    return count
+
+
+def iter_parquet(stream: BinaryIO, batch_size: int = 1_000) -> Iterator[dict[str, Any]]:
+    import pyarrow.parquet as parquet
+
+    source = parquet.ParquetFile(stream)
+    for batch in source.iter_batches(batch_size=batch_size):
+        yield from batch.to_pylist()
+
+
+def write_parquet(rows: Iterator[dict[str, Any]], stream: BinaryIO, batch_size: int = 1_000) -> int:
+    import pyarrow as arrow
+    import pyarrow.parquet as parquet
+
+    writer = None
+    buffered: list[dict[str, Any]] = []
+    count = 0
+    try:
+        for row in rows:
+            buffered.append(row)
+            if len(buffered) < batch_size:
+                continue
+            table = arrow.Table.from_pylist(buffered)
+            writer = writer or parquet.ParquetWriter(stream, table.schema)
+            writer.write_table(table)
+            count += len(buffered)
+            buffered.clear()
+        if buffered:
+            table = arrow.Table.from_pylist(buffered)
+            writer = writer or parquet.ParquetWriter(stream, table.schema)
+            writer.write_table(table)
+            count += len(buffered)
+        return count
+    finally:
+        if writer:
+            writer.close()

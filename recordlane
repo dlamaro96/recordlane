@@ -7,7 +7,7 @@ DEMO_COMPOSE="$ROOT_DIR/deploy/compose/compose.demo.yaml"
 PROD_COMPOSE="$ROOT_DIR/deploy/compose/compose.production.yaml"
 
 usage() {
-  printf '%s\n' "Recordlane 0.1.0-alpha.1" "Usage: ./recordlane <doctor|demo|up|down|status|logs|configure|migrate|validate|test|seed|backup|restore|upgrade|export|acceptance>"
+  printf '%s\n' "Recordlane 0.1.0-alpha.1" "Usage: ./recordlane <doctor|demo|demo-reset|up|down|status|logs|configure|migrate|validate|test|seed|backup|restore|upgrade|export|acceptance>"
 }
 
 case "${1:-}" in
@@ -24,6 +24,15 @@ case "${1:-}" in
   demo)
     docker compose -f "$DEMO_COMPOSE" up -d --build
     printf 'Recordlane: http://127.0.0.1:8088\nIdentity admin: http://127.0.0.1:58080\n'
+    ;;
+  demo-reset)
+    if [ "${2:-}" != "--confirm" ]; then
+      printf 'This deletes only the recordlane-demo database and consumer volumes, then recreates synthetic data.\nUsage: ./recordlane demo-reset --confirm\n' >&2
+      exit 2
+    fi
+    docker compose -f "$DEMO_COMPOSE" down --volumes --remove-orphans
+    docker compose -f "$DEMO_COMPOSE" up -d --build
+    printf 'Synthetic recordlane-demo state was deleted and recreated at http://127.0.0.1:8088\n'
     ;;
   up)
     env_file="$ROOT_DIR/deploy/compose/.env.production"
@@ -72,8 +81,9 @@ case "${1:-}" in
     if ! docker compose -f "$DEMO_COMPOSE" exec -T postgres pg_restore --exit-on-error --no-owner --no-privileges -U recordlane_migrator -d "$restore_db" < "$input"; then
       printf 'Restore failed; isolated database %s is retained for diagnosis.\n' "$restore_db" >&2; exit 3
     fi
-    restored_counts="$(docker compose -f "$DEMO_COMPOSE" exec -T postgres psql -U recordlane_migrator -d "$restore_db" -Atc "select (select count(*) from source_records)||','||(select count(*) from entities)||','||(select count(*) from review_tasks)||','||(select count(*) from configuration_versions)||','||(select count(*) from outbox_events);")"
-    printf 'Restored isolated database: %s\nVerified counts (source_records,entities,review_tasks,configurations,outbox): %s\nNo API is started for this database; outbound connectors therefore remain disabled pending reconciliation.\n' "$restore_db" "$restored_counts"
+    docker compose -f "$DEMO_COMPOSE" exec -T postgres psql -v ON_ERROR_STOP=1 -U recordlane_migrator -d "$restore_db" -c "update outbox_events set status='reconcile' where status='delivered';" >/dev/null
+    restored_counts="$(docker compose -f "$DEMO_COMPOSE" exec -T postgres psql -U recordlane_migrator -d "$restore_db" -Atc "select (select count(*) from source_records)||','||(select count(*) from source_objects)||','||(select count(*) from entities)||','||(select count(*) from membership_history)||','||(select count(*) from relationships)||','||(select count(*) from review_tasks)||','||(select count(*) from configuration_versions)||','||(select count(*) from outbox_events)||','||(select count(*) from audit_entries);")"
+    printf 'Restored isolated database: %s\nVerified counts (source_records,source_objects,entities,memberships,relationships,review_tasks,configurations,outbox,audit): %s\nNo API is started for this database. Previously delivered events are marked reconcile because the dump cannot prove external consumer state; outbound connectors remain disabled until receipts are checked.\n' "$restore_db" "$restored_counts"
     ;;
   upgrade) printf 'Run preflight and backup, then follow docs/guides/upgrade.md. Database downgrade is restore-based.\n' ;;
   export)

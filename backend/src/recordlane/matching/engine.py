@@ -11,6 +11,7 @@ class MatchEvidence:
     decision: str
     evidence: list[dict[str, Any]]
     contradictions: list[dict[str, Any]]
+    score_kind: str = "weighted_similarity"
     policy_version: str = "deterministic-1"
 
     def as_dict(self) -> dict[str, Any]:
@@ -29,5 +30,6 @@ def compare(
         result["decision"],
         result["evidence"],
         result["contradictions"],
+        result["score_kind"],
         f"policy:{runtime.version}:{runtime.checksum[:12]}",
     )

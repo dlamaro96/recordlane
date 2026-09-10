@@ -14,9 +14,19 @@ from sqlalchemy.engine import Connection, Engine
 import recordlane.models  # noqa: F401
 from recordlane.database import Base, engine
 from recordlane.models.tables import (
+    BrowserSession,
     CandidateBlock,
+    DeliveryAttempt,
     Domain,
+    IdentityGroup,
+    IdentityGroupMember,
+    IdentityUser,
+    IngestionRun,
     MembershipHistory,
+    OidcLogin,
+    PublicationReceipt,
+    SecretReference,
+    ServiceAccount,
     SourceObject,
     SourceObservationMeta,
     SourceRecord,
@@ -157,6 +167,110 @@ def _create_stable_identity_tables(connection: Connection) -> None:
                 )
 
 
+def _create_access_tables(connection: Connection) -> None:
+    for table in (IdentityUser.__table__, BrowserSession.__table__, OidcLogin.__table__):
+        table.create(connection, checkfirst=True)
+
+
+def _create_workspace_rls(connection: Connection) -> None:
+    if connection.dialect.name != "postgresql":
+        return
+    for table in Base.metadata.sorted_tables:
+        if not inspect(connection).has_table(table.name):
+            continue
+        if table.name in {"identity_users", "browser_sessions", "oidc_logins"}:
+            continue
+        if table.name == "workspaces":
+            predicate = (
+                "id::text = current_setting('recordlane.workspace_id', true) OR "
+                "slug = current_setting('recordlane.workspace_id', true)"
+            )
+        elif "workspace_id" in table.c:
+            predicate = "workspace_id::text = current_setting('recordlane.workspace_id', true)"
+        else:
+            continue
+        policy = f"recordlane_workspace_{table.name}"
+        connection.execute(text(f'ALTER TABLE "{table.name}" ENABLE ROW LEVEL SECURITY'))
+        connection.execute(text(f'ALTER TABLE "{table.name}" FORCE ROW LEVEL SECURITY'))
+        connection.execute(text(f'DROP POLICY IF EXISTS "{policy}" ON "{table.name}"'))
+        connection.execute(
+            text(
+                f'CREATE POLICY "{policy}" ON "{table.name}" '
+                f"USING ({predicate}) WITH CHECK ({predicate})"
+            )
+        )
+
+
+def _add_source_configuration(connection: Connection) -> None:
+    columns = {column["name"] for column in inspect(connection).get_columns("sources")}
+    if "config" in columns:
+        return
+    connection.execute(text("ALTER TABLE sources ADD COLUMN config JSON"))
+    connection.execute(text("UPDATE sources SET config = '{}' WHERE config IS NULL"))
+
+
+def _create_publication_tracking(connection: Connection) -> None:
+    for table in (DeliveryAttempt.__table__, PublicationReceipt.__table__):
+        table.create(connection, checkfirst=True)
+    if connection.dialect.name == "postgresql":
+        for table in (DeliveryAttempt.__table__, PublicationReceipt.__table__):
+            predicate = "workspace_id::text = current_setting('recordlane.workspace_id', true)"
+            policy = f"recordlane_workspace_{table.name}"
+            connection.execute(text(f'ALTER TABLE "{table.name}" ENABLE ROW LEVEL SECURITY'))
+            connection.execute(text(f'ALTER TABLE "{table.name}" FORCE ROW LEVEL SECURITY'))
+            connection.execute(text(f'DROP POLICY IF EXISTS "{policy}" ON "{table.name}"'))
+            connection.execute(
+                text(
+                    f'CREATE POLICY "{policy}" ON "{table.name}" '
+                    f"USING ({predicate}) WITH CHECK ({predicate})"
+                )
+            )
+
+
+def _create_ingestion_runs(connection: Connection) -> None:
+    IngestionRun.__table__.create(connection, checkfirst=True)
+    if connection.dialect.name == "postgresql":
+        predicate = "workspace_id::text = current_setting('recordlane.workspace_id', true)"
+        policy = "recordlane_workspace_ingestion_runs"
+        connection.execute(text('ALTER TABLE "ingestion_runs" ENABLE ROW LEVEL SECURITY'))
+        connection.execute(text('ALTER TABLE "ingestion_runs" FORCE ROW LEVEL SECURITY'))
+        connection.execute(text(f'DROP POLICY IF EXISTS "{policy}" ON "ingestion_runs"'))
+        connection.execute(
+            text(
+                f'CREATE POLICY "{policy}" ON "ingestion_runs" '
+                f"USING ({predicate}) WITH CHECK ({predicate})"
+            )
+        )
+
+
+def _create_identity_groups(connection: Connection) -> None:
+    IdentityGroup.__table__.create(connection, checkfirst=True)
+    IdentityGroupMember.__table__.create(connection, checkfirst=True)
+
+
+def _refresh_workspace_admin_rls(connection: Connection) -> None:
+    if connection.dialect.name != "postgresql":
+        return
+    predicate = (
+        "id::text = current_setting('recordlane.workspace_id', true) OR "
+        "slug = current_setting('recordlane.workspace_id', true) OR "
+        "current_setting('recordlane.is_admin', true) = 'true'"
+    )
+    policy = "recordlane_workspace_workspaces"
+    connection.execute(text(f'DROP POLICY IF EXISTS "{policy}" ON "workspaces"'))
+    connection.execute(
+        text(
+            f'CREATE POLICY "{policy}" ON "workspaces" USING ({predicate}) WITH CHECK ({predicate})'
+        )
+    )
+
+
+def _create_operational_security_tables(connection: Connection) -> None:
+    ServiceAccount.__table__.create(connection, checkfirst=True)
+    SecretReference.__table__.create(connection, checkfirst=True)
+    _create_workspace_rls(connection)
+
+
 MIGRATIONS = (
     Migration("0001_alpha_baseline", "initial modular-monolith schema", lambda _: None),
     Migration(
@@ -164,6 +278,46 @@ MIGRATIONS = (
         "stable source objects, immutable observation metadata, indexed candidate blocks, "
         "temporal membership, and durable cannot-link constraints",
         _create_stable_identity_tables,
+    ),
+    Migration(
+        "0003_browser_identity",
+        "OIDC PKCE transactions, opaque browser sessions, and SCIM identity lifecycle",
+        _create_access_tables,
+    ),
+    Migration(
+        "0004_workspace_rls",
+        "forced PostgreSQL row-level security for every workspace-owned table",
+        _create_workspace_rls,
+    ),
+    Migration(
+        "0005_source_configuration",
+        "validated non-secret source connection configuration",
+        _add_source_configuration,
+    ),
+    Migration(
+        "0006_publication_tracking",
+        "consumer-specific delivery attempts and verified publication receipts",
+        _create_publication_tracking,
+    ),
+    Migration(
+        "0007_ingestion_runs",
+        "durable extraction checkpoints, completeness evidence, and snapshot handoff metadata",
+        _create_ingestion_runs,
+    ),
+    Migration(
+        "0008_identity_groups",
+        "SCIM group provisioning and durable user membership",
+        _create_identity_groups,
+    ),
+    Migration(
+        "0009_workspace_provisioning_rls",
+        "administrator-scoped workspace provisioning under forced row-level security",
+        _refresh_workspace_admin_rls,
+    ),
+    Migration(
+        "0010_operational_security",
+        "scoped service identities and encrypted or external secret references",
+        _create_operational_security_tables,
     ),
 )
 

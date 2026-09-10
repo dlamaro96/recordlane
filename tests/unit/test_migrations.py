@@ -20,13 +20,29 @@ NEW_TABLES = {
     "candidate_blocks",
     "membership_history",
     "source_object_cannot_links",
+    "identity_users",
+    "browser_sessions",
+    "oidc_logins",
 }
+
+REVISIONS = [
+    "0001_alpha_baseline",
+    "0002_stable_source_identity",
+    "0003_browser_identity",
+    "0004_workspace_rls",
+    "0005_source_configuration",
+    "0006_publication_tracking",
+    "0007_ingestion_runs",
+    "0008_identity_groups",
+    "0009_workspace_provisioning_rls",
+    "0010_operational_security",
+]
 
 
 def test_clean_install_is_versioned_and_idempotent():
     target = create_engine("sqlite://")
 
-    assert migrate(target) == ["0001_alpha_baseline", "0002_stable_source_identity"]
+    assert migrate(target) == REVISIONS
     assert NEW_TABLES <= set(inspect(target).get_table_names())
     assert migrate(target) == []
 
@@ -92,7 +108,7 @@ def test_unversioned_alpha_schema_is_upgraded_without_losing_data():
             )
         )
 
-    assert migrate(target) == ["0001_alpha_baseline", "0002_stable_source_identity"]
+    assert migrate(target) == REVISIONS
 
     with target.connect() as connection:
         assert (
@@ -103,12 +119,10 @@ def test_unversioned_alpha_schema_is_upgraded_without_losing_data():
             )
             == "Legacy alpha workspace"
         )
-        assert connection.execute(
-            select(schema_migrations.c.revision)
-        ).scalars().all() == [
-            "0001_alpha_baseline",
-            "0002_stable_source_identity",
-        ]
+        assert (
+            connection.execute(select(schema_migrations.c.revision)).scalars().all()
+            == REVISIONS
+        )
         source_object = (
             connection.execute(select(SourceObject.__table__)).mappings().one()
         )

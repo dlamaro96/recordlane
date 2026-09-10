@@ -1,0 +1,23 @@
+services:
+  migrate:
+    image: recordlane-demo-api:latest
+    env_file: !override [../../tests/compose/production-test.env]
+  api:
+    image: recordlane-demo-api:latest
+    env_file: !override [../../tests/compose/production-test.env]
+  worker:
+    image: recordlane-demo-api:latest
+    env_file: !override [../../tests/compose/production-test.env]
+  web:
+    image: recordlane-demo-web:latest
+secrets:
+  recordlane-master-key:
+    file: ../../examples/demo/master-key.txt
+  recordlane-scim-token:
+    file: ../../examples/demo/scim-token.txt
+  recordlane-metrics-token:
+    file: ../../examples/demo/scim-token.txt
+networks:
+  default:
+    external: true
+    name: recordlane-production-acceptance

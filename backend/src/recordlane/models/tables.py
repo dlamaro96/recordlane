@@ -36,6 +36,118 @@ class Workspace(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
 
+class IdentityUser(Base):
+    """Locally governed projection of an OIDC/SCIM identity."""
+
+    __tablename__ = "identity_users"
+    __table_args__ = (
+        UniqueConstraint("issuer", "subject"),
+        UniqueConstraint("issuer", "external_id"),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    issuer: Mapped[str] = mapped_column(String(500))
+    subject: Mapped[str] = mapped_column(String(255))
+    external_id: Mapped[str | None] = mapped_column(String(255))
+    user_name: Mapped[str] = mapped_column(String(320), index=True)
+    display_name: Mapped[str | None] = mapped_column(String(320))
+    active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    roles: Mapped[list] = mapped_column(JSON, default=list)
+    workspace_ids: Mapped[list] = mapped_column(JSON, default=list)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
+
+
+class IdentityGroup(Base):
+    """SCIM-provisioned group carrying Recordlane roles and workspace grants."""
+
+    __tablename__ = "identity_groups"
+    __table_args__ = (UniqueConstraint("issuer", "external_id"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    issuer: Mapped[str] = mapped_column(String(500))
+    external_id: Mapped[str] = mapped_column(String(255))
+    display_name: Mapped[str] = mapped_column(String(320), index=True)
+    roles: Mapped[list] = mapped_column(JSON, default=list)
+    workspace_ids: Mapped[list] = mapped_column(JSON, default=list)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
+
+
+class IdentityGroupMember(Base):
+    __tablename__ = "identity_group_members"
+    group_id: Mapped[str] = mapped_column(ForeignKey("identity_groups.id"), primary_key=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("identity_users.id"), primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class BrowserSession(Base):
+    """Opaque browser session; tokens never enter browser JavaScript."""
+
+    __tablename__ = "browser_sessions"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    identity_user_id: Mapped[str] = mapped_column(ForeignKey("identity_users.id"), index=True)
+    issuer: Mapped[str] = mapped_column(String(500))
+    workspace_id: Mapped[str] = mapped_column(String(80), index=True)
+    roles: Mapped[list] = mapped_column(JSON, default=list)
+    id_token_hint: Mapped[str | None] = mapped_column(Text)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class OidcLogin(Base):
+    """Single-use, short-lived PKCE transaction state."""
+
+    __tablename__ = "oidc_logins"
+    state_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    encrypted_verifier: Mapped[str] = mapped_column(Text)
+    nonce: Mapped[str] = mapped_column(String(255))
+    return_to: Mapped[str] = mapped_column(String(500), default="/")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, index=True)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class ServiceAccount(Base):
+    """Workspace-scoped machine identity with a non-recoverable credential verifier."""
+
+    __tablename__ = "service_accounts"
+    __table_args__ = (UniqueConstraint("workspace_id", "name"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    name: Mapped[str] = mapped_column(String(160))
+    token_prefix: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    verifier: Mapped[str] = mapped_column(String(128))
+    salt: Mapped[str] = mapped_column(String(64))
+    credential_version: Mapped[int] = mapped_column(Integer, default=1)
+    roles: Mapped[list] = mapped_column(JSON, default=list)
+    scopes: Mapped[list] = mapped_column(JSON, default=list)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_by: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class SecretReference(Base):
+    """Secret metadata; local values are encrypted and external values remain external."""
+
+    __tablename__ = "secret_references"
+    __table_args__ = (UniqueConstraint("workspace_id", "name"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    name: Mapped[str] = mapped_column(String(160))
+    provider: Mapped[str] = mapped_column(String(32))
+    locator: Mapped[str] = mapped_column(String(500))
+    encrypted_value: Mapped[str | None] = mapped_column(Text)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    created_by: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
+
+
 class Domain(Base):
     __tablename__ = "domains"
     __table_args__ = (UniqueConstraint("workspace_id", "key"),)
@@ -60,6 +172,7 @@ class Source(Base):
     kind: Mapped[str] = mapped_column(String(40))
     priority: Mapped[int] = mapped_column(Integer, default=100)
     capabilities: Mapped[dict] = mapped_column(JSON, default=dict)
+    config: Mapped[dict] = mapped_column(JSON, default=dict)
     checkpoint: Mapped[dict] = mapped_column(JSON, default=dict)
     status: Mapped[str] = mapped_column(String(24), default="healthy")
     last_ingested_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -134,6 +247,33 @@ class SourceObservationMeta(Base):
     source_sequence: Mapped[int | None] = mapped_column(Integer)
     update_mode: Mapped[str] = mapped_column(String(16), default="full")
     received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class IngestionRun(Base):
+    """Durable extraction boundary and completeness evidence for resumable loads."""
+
+    __tablename__ = "ingestion_runs"
+    __table_args__ = (
+        UniqueConstraint("workspace_id", "source_id", "domain_key", "external_id"),
+        Index("ix_ingestion_runs_workspace_status", "workspace_id", "status"),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    source_id: Mapped[str] = mapped_column(ForeignKey("sources.id"), index=True)
+    domain_key: Mapped[str] = mapped_column(String(80))
+    external_id: Mapped[str] = mapped_column(String(120))
+    extraction_mode: Mapped[str] = mapped_column(String(16))
+    status: Mapped[str] = mapped_column(String(24), default="running", index=True)
+    snapshot_position: Mapped[str | None] = mapped_column(String(255))
+    handoff_from: Mapped[str | None] = mapped_column(String(120))
+    checkpoint: Mapped[dict] = mapped_column(JSON, default=dict)
+    seen_local_ids: Mapped[list] = mapped_column(JSON, default=list)
+    records_processed: Mapped[int] = mapped_column(Integer, default=0)
+    source_complete: Mapped[bool] = mapped_column(Boolean, default=False)
+    last_error: Mapped[str | None] = mapped_column(Text)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class CandidateBlock(Base):
@@ -280,6 +420,40 @@ class OutboxEvent(Base):
     attempts: Mapped[int] = mapped_column(Integer, default=0)
     last_error: Mapped[str | None] = mapped_column(Text)
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class DeliveryAttempt(Base):
+    """Durable record of a consumer-specific publication attempt."""
+
+    __tablename__ = "delivery_attempts"
+    __table_args__ = (
+        UniqueConstraint("event_id", "consumer_key", "attempt"),
+        Index("ix_delivery_attempts_workspace_status", "workspace_id", "status"),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    event_id: Mapped[str] = mapped_column(ForeignKey("outbox_events.id"), index=True)
+    consumer_key: Mapped[str] = mapped_column(String(100), index=True)
+    attempt: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(24), default="sending")
+    response_code: Mapped[int | None] = mapped_column(Integer)
+    error: Mapped[str | None] = mapped_column(Text)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class PublicationReceipt(Base):
+    """Consumer acknowledgement established by delivery or later reconciliation."""
+
+    __tablename__ = "publication_receipts"
+    __table_args__ = (UniqueConstraint("event_id", "consumer_key"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    event_id: Mapped[str] = mapped_column(ForeignKey("outbox_events.id"), index=True)
+    consumer_key: Mapped[str] = mapped_column(String(100), index=True)
+    entity_version: Mapped[int | None] = mapped_column(Integer)
+    outcome: Mapped[str] = mapped_column(String(32))
+    verified_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
 
 class AuditEntry(Base):

@@ -11,18 +11,26 @@ def resolved(address: str):
 
 
 def test_rejects_credentials_and_unapproved_hosts():
-    with pytest.raises(ValueError): PaginatedHttpConnector("https://user:secret@example.test", {"example.test"})
-    with pytest.raises(ValueError): PaginatedHttpConnector("https://other.test", {"example.test"})
+    with pytest.raises(ValueError):
+        PaginatedHttpConnector("https://user:secret@example.test", {"example.test"})
+    with pytest.raises(ValueError):
+        PaginatedHttpConnector("https://other.test", {"example.test"})
 
 
 def test_private_and_metadata_destinations_need_specific_authorization():
     with patch("socket.getaddrinfo", return_value=resolved("10.0.0.7")):
         with pytest.raises(ValueError, match="private connector"):
             PaginatedHttpConnector("https://erp.internal", {"erp.internal"})
-        PaginatedHttpConnector("https://erp.internal", {"erp.internal"}, allow_private_networks=True)
+        PaginatedHttpConnector(
+            "https://erp.internal", {"erp.internal"}, allow_private_networks=True
+        )
     with patch("socket.getaddrinfo", return_value=resolved("169.254.169.254")):
         with pytest.raises(ValueError, match="metadata"):
-            PaginatedHttpConnector("https://metadata.internal", {"metadata.internal"}, allow_private_networks=True)
+            PaginatedHttpConnector(
+                "https://metadata.internal",
+                {"metadata.internal"},
+                allow_private_networks=True,
+            )
 
 
 def test_disallows_cleartext_remote_destination():

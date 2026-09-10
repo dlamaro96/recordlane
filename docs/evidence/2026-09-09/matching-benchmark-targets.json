@@ -1,0 +1,16 @@
+{
+  "recorded_before_run": "2026-09-10T06:20:00Z",
+  "workload_source_records": 100000,
+  "targets": {
+    "minimum_source_records_per_second": 20000,
+    "minimum_pairwise_accuracy_on_fixed_synthetic_labels": 0.99,
+    "maximum_process_peak_rss_bytes": 1073741824
+  },
+  "scope": "Single-process normalization and pair comparison on the fixed synthetic workload",
+  "non_goals": [
+    "Database ingestion throughput",
+    "End-to-end API latency",
+    "Production-data accuracy",
+    "Million-record validation"
+  ]
+}

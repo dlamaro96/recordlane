@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import logging
 import os
 import socket
+import threading
 import time
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
@@ -28,6 +30,41 @@ WORKER_ID = f"{socket.gethostname()}:{os.getpid()}"
 LEASE_SECONDS = 30
 MAX_ATTEMPTS = 5
 Handler = Callable[[Session, DurableJob], dict]
+
+
+def renew_lease(job_id: str, fence: int) -> bool:
+    """Extend a claim only while this exact worker generation still owns it."""
+
+    with SessionLocal.begin() as db:
+        renewed = db.execute(
+            update(DurableJob)
+            .where(
+                DurableJob.id == job_id,
+                DurableJob.lease_owner == WORKER_ID,
+                DurableJob.lease_version == fence,
+                DurableJob.status == "running",
+                DurableJob.cancel_requested.is_(False),
+            )
+            .values(lease_expires_at=datetime.now(UTC) + timedelta(seconds=LEASE_SECONDS))
+        )
+        return renewed.rowcount == 1
+
+
+def _heartbeat(job_id: str, fence: int, stop: threading.Event, lost: threading.Event) -> None:
+    interval = max(0.25, LEASE_SECONDS / 3)
+    while not stop.wait(interval):
+        try:
+            if not renew_lease(job_id, fence):
+                lost.set()
+                return
+        except Exception as exc:
+            # A transient database failure must not silently surrender the fence. Retry
+            # until the handler finishes; the final conditional update remains authoritative.
+            logging.getLogger("recordlane.worker").warning(
+                "job_heartbeat_failed",
+                extra={"job_id": job_id, "error_type": type(exc).__name__},
+            )
+            continue
 
 
 def _service(db: Session, job: DurableJob) -> MasteringService:
@@ -159,6 +196,15 @@ def run_once() -> bool:
     if not claimed:
         return False
     job_id, fence = claimed
+    heartbeat_stop = threading.Event()
+    heartbeat_lost = threading.Event()
+    heartbeat = threading.Thread(
+        target=_heartbeat,
+        args=(job_id, fence, heartbeat_stop, heartbeat_lost),
+        name=f"recordlane-heartbeat-{job_id}",
+        daemon=True,
+    )
+    heartbeat.start()
     try:
         with SessionLocal.begin() as db:
             job = db.get(DurableJob, job_id)
@@ -177,6 +223,10 @@ def run_once() -> bool:
                 job.lease_expires_at = None
                 return True
             result = handler(db, job)
+            heartbeat_stop.set()
+            heartbeat.join(timeout=max(1.0, LEASE_SECONDS / 2))
+            if heartbeat_lost.is_set():
+                raise RuntimeError("job fence was lost during execution")
             completed = db.execute(
                 update(DurableJob)
                 .where(
@@ -197,6 +247,8 @@ def run_once() -> bool:
                 raise RuntimeError("job fence was lost before commit")
         return True
     except Exception as exc:
+        heartbeat_stop.set()
+        heartbeat.join(timeout=max(1.0, LEASE_SECONDS / 2))
         with SessionLocal.begin() as db:
             job = db.get(DurableJob, job_id)
             if job and job.lease_owner == WORKER_ID and job.lease_version == fence:
@@ -205,6 +257,8 @@ def run_once() -> bool:
                 job.lease_owner = None
                 job.lease_expires_at = None
         return True
+    finally:
+        heartbeat_stop.set()
 
 
 def main() -> None:

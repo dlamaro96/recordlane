@@ -7,6 +7,7 @@ spec:
   backoffLimit: 3
   template:
     spec:
+      automountServiceAccountToken: false
       restartPolicy: Never
       securityContext: {runAsNonRoot: true, runAsUser: 10001, seccompProfile: {type: RuntimeDefault}}
       containers:
@@ -14,5 +15,6 @@ spec:
           image: "{{ .Values.image.api }}:{{ .Values.image.tag }}"
           command: [python, -m, recordlane.operations.migrate]
           env:
-            - {name: RECORDLANE_DATABASE_URL, valueFrom: {secretKeyRef: {name: {{ .Values.database.secretName }}, key: {{ .Values.database.urlKey }}}}}
+            - {name: RECORDLANE_DATABASE_URL, valueFrom: {secretKeyRef: {name: {{ .Values.database.migrationSecretName }}, key: {{ .Values.database.migrationUrlKey }}}}}
+          resources: {{ toYaml .Values.resources.api | nindent 12 }}
           securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
