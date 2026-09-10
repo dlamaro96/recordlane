@@ -52,7 +52,7 @@ async def lifespan(_: FastAPI):
 app = FastAPI(
     title="Recordlane API",
     summary="One identity. Every source. Your control.",
-    version="0.1.0-alpha.2",
+    version="0.1.0-alpha.3",
     lifespan=lifespan,
     docs_url=None if settings.environment == "production" else "/docs",
     redoc_url=None if settings.environment == "production" else "/redoc",

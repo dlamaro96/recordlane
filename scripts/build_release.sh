@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
-release_tag="${1:?usage: scripts/build_release.sh v0.1.0-alpha.2}"
+release_tag="${1:?usage: scripts/build_release.sh v0.1.0-alpha.3}"
 case "$release_tag" in v[0-9]*.[0-9]*.[0-9]*-*) ;; *) printf 'Expected a semantic prerelease tag, got %s\n' "$release_tag" >&2; exit 2;; esac
 release_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 mkdir -p "$release_root/dist"

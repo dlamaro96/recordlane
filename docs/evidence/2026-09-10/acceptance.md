@@ -69,4 +69,9 @@ authorized vendor credentials were supplied.
   packaging step had deleted them from its shared output directory. The release
   is retained and clearly labeled as an incomplete candidate; it is not a pass.
 - The packaging cleanup is now scoped to the source/chart artifacts it owns.
-  `0.1.0-alpha.2` is the corrected candidate target.
+- `v0.1.0-alpha.2` run 34460309085 was cancelled after its emulated arm64 web
+  build reported `qemu: uncaught target signal 4 (Illegal instruction)` and
+  stopped producing output. It published only a partial API image and did not
+  create a GitHub Release; it is not a pass.
+- `0.1.0-alpha.3` uses a native build stage for the architecture-independent
+  web bundle and is the corrected candidate target.

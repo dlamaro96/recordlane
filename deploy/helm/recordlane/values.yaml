@@ -3,7 +3,7 @@ workerReplicaCount: 2
 image:
   api: ghcr.io/dlamaro96/recordlane-api
   web: ghcr.io/dlamaro96/recordlane-web
-  tag: 0.1.0-alpha.2
+  tag: 0.1.0-alpha.3
   pullPolicy: IfNotPresent
 database:
   secretName: recordlane-database

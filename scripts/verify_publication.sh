@@ -26,4 +26,11 @@ done
 docs_url="https://$owner.github.io/recordlane-docs/"
 curl --fail --silent --show-error --location "$docs_url" >/dev/null
 printf 'PASS documentation          %s\n' "$docs_url"
-printf 'NOTE release packages/images/chart/signatures are not published while REQUIREMENTS.yaml remains blocked.\n'
+
+if [ -n "${RECORDLANE_RELEASE_TAG:-}" ]; then
+  "$root/backend/.venv/bin/pytest" -q \
+    "$root/tests/acceptance/test_contract_scenarios.py::test_ax_published_artifacts_and_attestations"
+  printf 'PASS release consumer       %s\n' "$RECORDLANE_RELEASE_TAG"
+else
+  printf 'NOTE set RECORDLANE_RELEASE_TAG to verify release assets, images, signatures, and attestations.\n'
+fi

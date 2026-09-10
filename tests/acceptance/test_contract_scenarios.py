@@ -817,6 +817,7 @@ def test_ax_published_artifacts_and_attestations():
         blocked("set RECORDLANE_RELEASE_TAG to the exact published candidate tag")
     assert re.fullmatch(r"v\d+\.\d+\.\d+-[0-9A-Za-z.-]+", tag)
     version = tag.removeprefix("v")
+    python_version = re.sub(r"-alpha\.(\d+)$", r"a\1", version)
     repository = "dlamaro96/recordlane"
     release = subprocess.run(
         [
@@ -844,10 +845,10 @@ def test_ax_published_artifacts_and_attestations():
         f"recordlane-{version}.sbom.spdx.json",
         "recordlane-api-manifest.json",
         "recordlane-web-manifest.json",
-        "recordlane_client-0.1.0a2-py3-none-any.whl",
-        "recordlane_client-0.1.0a2.tar.gz",
-        "recordlane_connector_kit-0.1.0a2-py3-none-any.whl",
-        "recordlane_connector_kit-0.1.0a2.tar.gz",
+        f"recordlane_client-{python_version}-py3-none-any.whl",
+        f"recordlane_client-{python_version}.tar.gz",
+        f"recordlane_connector_kit-{python_version}-py3-none-any.whl",
+        f"recordlane_connector_kit-{python_version}.tar.gz",
         f"recordlane-client-{version}.tgz",
         f"recordlane-docs-{version}.tar.gz",
         "SOURCE_COMMIT",
@@ -955,8 +956,8 @@ def test_ax_published_artifacts_and_attestations():
                 "pip",
                 "install",
                 "--no-deps",
-                download / "recordlane_client-0.1.0a2-py3-none-any.whl",
-                download / "recordlane_connector_kit-0.1.0a2-py3-none-any.whl",
+                download / f"recordlane_client-{python_version}-py3-none-any.whl",
+                download / f"recordlane_connector_kit-{python_version}-py3-none-any.whl",
             ],
             check=True,
             timeout=120,

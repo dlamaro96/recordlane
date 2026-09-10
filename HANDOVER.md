@@ -17,7 +17,9 @@ PyPI/npm registry publication is claimed.
 
 `v0.1.0-alpha.1` is preserved as an incomplete candidate: AX found that its
 release omitted both image-manifest files. Its release page is labeled “do not
-use.” The corrected candidate is `v0.1.0-alpha.2`.
+use.” The alpha.2 run was cancelled after QEMU crashed during its arm64 web
+build and stopped producing output; no alpha.2 GitHub Release was created. The
+native web-build correction is carried by `v0.1.0-alpha.3`.
 
 ## Make the next change
 

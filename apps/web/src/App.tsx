@@ -75,7 +75,7 @@ export function App() {
       <section className="title"><div><div className="kicker">Workspace / {nav.find(n=>n[0]===page)?.[2]}</div><h1>{labels[page]?.[0]}</h1><p>{labels[page]?.[1]}</p></div><div className="status"><span className="pulse"/><span><strong>Live workspace</strong>Updated just now</span></div></section>
       {error&&<div className="notice error"><strong>Could not load workspace</strong>{error}<button onClick={reload}>Retry</button></div>}
       {state&&<Page id={page} data={state} role={role} reload={reload}/>} 
-      <footer><span>Recordlane 0.1.0-alpha.2</span><span>Loopback demo · external AI off</span><span>At-least-once publication</span></footer>
+      <footer><span>Recordlane 0.1.0-alpha.3</span><span>Loopback demo · external AI off</span><span>At-least-once publication</span></footer>
     </main>
   </div>;
 }

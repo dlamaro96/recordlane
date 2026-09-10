@@ -1,6 +1,6 @@
 # Execution status
 
-Updated: 2026-09-10T11:27:00+04:00
+Updated: 2026-09-10T14:00:00+04:00
 
 ## Environment
 
@@ -24,8 +24,8 @@ Updated: 2026-09-10T11:27:00+04:00
 - Product implementation: WORKING OPEN ALPHA. Stable source identities and immutable observations, configuration-driven deterministic and Fellegi–Sunter matching, impact simulation, field/action/workspace authorization, OIDC/SCIM/service identities, encrypted/Vault secret references, fenced jobs, transactional publication/reconciliation, observability, recovery, and a redesigned light-first UI operate against persisted backend state.
 - Verification: the final consolidated A–W acceptance invocation passes 23/23 scenarios in 239.46 seconds. Separately, 72 non-acceptance backend tests pass with two environment-specific PostgreSQL skips; the PostgreSQL/RLS paths run in the acceptance and CI PostgreSQL suites. Frontend unit/build and nine Playwright scenarios pass, including real Keycloak login, persisted UI actions, offline mastering/publication, mobile layout, and automated WCAG A/AA checks. Sixteen clean seeded light-mode screenshots were recaptured and inspected. The 100,000-record synthetic matching exercise processed 59,135 source records/s with 1.0 pairwise accuracy in 1.691 seconds and 132,415,488-byte peak RSS; its in-memory synthetic limits are explicit.
 - Deployment/recovery: hardened production Compose and a disposable kind/Helm installation pass; the disconnected internal-network profile completes real login through local Keycloak, ingestion, matching, approval, and local publication; isolated restore preserves semantic counts and puts uncertain deliveries into reconciliation.
-- Release readiness: PREPUBLICATION GATES PASS; FINAL GATE BLOCKED on AX. The alpha.1 workflow succeeded but consumer verification failed because its release omitted both image-manifest files; it remains labeled as incomplete evidence. The cleanup defect is fixed and alpha.2 is the controlled candidate. Live-vendor compatibility remains unverified where credentials were unavailable; DNS connection pinning, privileged-DB tamper resistance, broader cluster/performance workloads, and HA failover remain documented limitations.
-- External publication: the five public source repositories and GitHub Pages documentation are live. Alpha.1 images/artifacts exist but are explicitly incomplete and not accepted. Alpha.2 is not claimed until its candidate workflow succeeds and is read back.
+- Release readiness: PREPUBLICATION GATES PASS; FINAL GATE BLOCKED on AX. Alpha.1 failed consumer verification because its release omitted both image-manifest files. Alpha.2 fixed that defect, but its QEMU arm64 web build crashed with an illegal instruction and the hung run was cancelled without a GitHub Release. Alpha.3 carries the validated native web-build correction. Live-vendor compatibility remains unverified where credentials were unavailable; DNS connection pinning, privileged-DB tamper resistance, broader cluster/performance workloads, and HA failover remain documented limitations.
+- External publication: the five public source repositories and GitHub Pages documentation are live. Alpha.1 is explicitly incomplete and not accepted; alpha.2 has only a partial API image and no GitHub Release. Alpha.3 is not claimed until its candidate workflow succeeds and is read back.
 
 ## Evidence convention
 

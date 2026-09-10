@@ -1,6 +1,6 @@
 schema_version: 1
 project: recordlane
-release: 0.1.0-alpha.2
+release: 0.1.0-alpha.3
 updated: 2026-09-10
 status_vocabulary: [NOT_STARTED, IMPLEMENTED, UNIT_TESTED, CONTRACT_TESTED, EMULATOR_TESTED, INTEGRATION_TESTED, PASSED, FAILED, BLOCKED]
 evidence_root: docs/evidence/2026-09-09
@@ -71,4 +71,4 @@ acceptance:
   - {id: AU, title: real UI and reproducible assets, test: test_au_real_ui_and_reproducible_assets, evidence: "acceptance.txt; screenshot manifest", status: PASSED, blocker: null}
   - {id: AV, title: security license and secret gates, test: test_av_security_and_secret_gates_are_explicit, evidence: "acceptance.txt; security", status: PASSED, blocker: null}
   - {id: AW, title: offline docs and contributor setup, test: test_aw_offline_docs_quickstart_examples_and_contributor_setup, evidence: acceptance.txt, status: PASSED, blocker: null}
-  - {id: AX, title: published artifacts and attestations, test: test_ax_published_artifacts_and_attestations, evidence: "acceptance.txt; HANDOVER.md", status: BLOCKED, blocker: "alpha.1 failed consumer verification because image manifests were omitted; corrected alpha.2 publication pending"}
+  - {id: AX, title: published artifacts and attestations, test: test_ax_published_artifacts_and_attestations, evidence: "acceptance.txt; HANDOVER.md", status: BLOCKED, blocker: "alpha.1 omitted image manifests; alpha.2 arm64 web build crashed under QEMU; corrected alpha.3 publication pending"}

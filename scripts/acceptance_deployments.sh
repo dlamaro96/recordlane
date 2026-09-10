@@ -65,14 +65,14 @@ for container in api worker web; do
   [ "$(docker inspect "$container_id" --format '{{json .HostConfig.SecurityOpt}}')" = '["no-new-privileges:true"]' ]
 done
 
-docker buildx build --platform linux/arm64 --provenance=false --load -t recordlane-api:0.1.0-alpha.2 "$project_root/backend"
-docker buildx build --platform linux/arm64 --provenance=false --load -t recordlane-web:0.1.0-alpha.2 "$project_root/apps/web"
+docker buildx build --platform linux/arm64 --provenance=false --load -t recordlane-api:0.1.0-alpha.3 "$project_root/backend"
+docker buildx build --platform linux/arm64 --provenance=false --load -t recordlane-web:0.1.0-alpha.3 "$project_root/apps/web"
 docker buildx build --platform linux/arm64 --provenance=false --load \
   -f "$project_root/tests/kubernetes/Postgres.Dockerfile" \
   -t recordlane-postgres:17.6 "$project_root/tests/kubernetes"
 kind delete cluster --name "$kind_cluster" >/dev/null 2>&1 || true
 kind create cluster --name "$kind_cluster" --wait 90s
-kind load docker-image --name "$kind_cluster" recordlane-api:0.1.0-alpha.2 recordlane-web:0.1.0-alpha.2 recordlane-postgres:17.6
+kind load docker-image --name "$kind_cluster" recordlane-api:0.1.0-alpha.3 recordlane-web:0.1.0-alpha.3 recordlane-postgres:17.6
 kubectl create namespace recordlane
 kubectl -n recordlane apply -f "$project_root/tests/kubernetes/postgres.yaml"
 kubectl -n recordlane wait --for=condition=Ready pod/postgres --timeout=120s

@@ -4,7 +4,7 @@
 self-hosted multidomain master data management platform for resolving source
 records into explainable, governed, and recoverable enterprise identities.
 
-> **Preview status:** 0.1.0-alpha.2 is under active acceptance validation. The
+> **Preview status:** 0.1.0-alpha.3 is under active acceptance validation. The
 > requirement matrix is authoritative; do not infer live-vendor compatibility
 > or production readiness from an available interface or recipe.
 
