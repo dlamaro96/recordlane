@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
-  "release": "0.1.0-alpha.1",
-  "status": "preview-blocked-from-release-publication",
+  "release": "0.1.0-alpha.2",
+  "status": "alpha.2-candidate-pending-consumer-verification",
   "contracts": {"api": "v1", "domain_pack": "v1alpha1", "connector": "1.0", "events": "1.0"},
   "repositories": {
-    "recordlane": "0.1.0-alpha.1",
-    "recordlane-python": "0.1.0a1",
-    "recordlane-typescript": "0.1.0-alpha.1",
-    "recordlane-ecosystem": "0.1.0a1",
-    "recordlane-docs": "0.1.0-alpha.1"
+    "recordlane": "0.1.0-alpha.2",
+    "recordlane-python": "0.1.0a2",
+    "recordlane-typescript": "0.1.0-alpha.2",
+    "recordlane-ecosystem": "0.1.0a2",
+    "recordlane-docs": "0.1.0-alpha.2"
   },
   "repository_urls": {
     "recordlane": "https://github.com/dlamaro96/recordlane",
@@ -18,11 +18,11 @@
     "recordlane-docs": "https://github.com/dlamaro96/recordlane-docs"
   },
   "documentation_url": "https://dlamaro96.github.io/recordlane-docs/",
-  "deployment": {"helm_chart": "0.1.0-alpha.1", "compose_schema": "demo-v1/production-v1"},
+  "deployment": {"helm_chart": "0.1.0-alpha.2", "compose_schema": "demo-v1/production-v1"},
   "local_images": {
     "recordlane-demo-api": "sha256:db33a60b056fec62b28816f820f01e5c50bcbd158150b779d24d045976948d1d",
     "recordlane-demo-web": "sha256:97da7f2918230e4ec067ba4397c10389103cbe3dc33ddd2ac45b6da1ca3d76df"
   },
   "published_images": null,
-  "notes": ["Local image digests are native arm64 build identities, not registry URLs.", "SDKs require a platform with API v1 and must query /api/v1/capabilities.", "GitHub release publication is intentionally gated while mandatory acceptance scenarios remain blocked."]
+  "notes": ["Local image digests are native arm64 build identities, not registry URLs.", "SDKs require a platform with API v1 and must query /api/v1/capabilities.", "The alpha.1 release is intentionally retained as failed evidence; alpha.2 is not accepted until AX passes."]
 }

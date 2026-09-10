@@ -1,7 +1,7 @@
 name: recordlane
 services:
   migrate:
-    image: ghcr.io/dlamaro96/recordlane-api:0.1.0-alpha.1
+    image: ghcr.io/dlamaro96/recordlane-api:0.1.0-alpha.2
     command: ["python", "-m", "recordlane.operations.migrate"]
     env_file: [.env.production]
     environment:
@@ -12,7 +12,7 @@ services:
     cap_drop: [ALL]
     restart: "no"
   api:
-    image: ghcr.io/dlamaro96/recordlane-api:0.1.0-alpha.1
+    image: ghcr.io/dlamaro96/recordlane-api:0.1.0-alpha.2
     env_file: [.env.production]
     secrets: [recordlane-master-key, recordlane-scim-token, recordlane-metrics-token]
     read_only: true
@@ -23,7 +23,7 @@ services:
     healthcheck: {test: [CMD, "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready')"], interval: 10s, timeout: 3s, retries: 12}
     restart: unless-stopped
   worker:
-    image: ghcr.io/dlamaro96/recordlane-api:0.1.0-alpha.1
+    image: ghcr.io/dlamaro96/recordlane-api:0.1.0-alpha.2
     command: ["python", "-m", "recordlane.jobs.worker"]
     env_file: [.env.production]
     secrets: [recordlane-master-key, recordlane-scim-token, recordlane-metrics-token]
@@ -34,7 +34,7 @@ services:
     depends_on: {migrate: {condition: service_completed_successfully}}
     restart: unless-stopped
   web:
-    image: ghcr.io/dlamaro96/recordlane-web:0.1.0-alpha.1
+    image: ghcr.io/dlamaro96/recordlane-web:0.1.0-alpha.2
     ports: ["${RECORDLANE_BIND_ADDRESS:-127.0.0.1}:${RECORDLANE_PORT:-8088}:8080"]
     depends_on: {api: {condition: service_healthy}}
     read_only: true

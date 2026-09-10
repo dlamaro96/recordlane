@@ -1,6 +1,6 @@
 # Threat model
 
-Updated: 2026-09-10. Scope: Recordlane 0.1.0-alpha.1 source, default and production Compose profiles, and Helm packaging. This is an engineering threat model, not a certification.
+Updated: 2026-09-10. Scope: Recordlane 0.1.0-alpha.2 source, default and production Compose profiles, and Helm packaging. This is an engineering threat model, not a certification.
 
 ## Assets and trust boundaries
 

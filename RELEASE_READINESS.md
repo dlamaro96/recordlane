@@ -1,11 +1,15 @@
 # Release readiness
 
-Target: 0.1.0-alpha.1
+Target: 0.1.0-alpha.2
 
 Recordlane is a working open alpha. Acceptance A–W have executable passing
 evidence. Acceptance X remains blocked until the controlled prerelease candidate
 is published and verified by digest, signature, attestation, and consumer install.
 A skipped or blocked check is never counted as a pass.
+
+The preserved alpha.1 candidate failed AX because the release omitted its two
+image-manifest files. Alpha.2 contains the scoped cleanup fix and must complete
+the entire verifier before this document is promoted.
 
 ## Mandatory gates
 

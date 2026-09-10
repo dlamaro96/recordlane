@@ -2,7 +2,7 @@
 FROM python:3.14.5-alpine3.22@sha256:6b91e66ab2a880ce9ca5a1b91c70f45963ff71ff68268df056336e1a657d5efd AS runtime
 LABEL org.opencontainers.image.source="https://github.com/dlamaro96/recordlane" \
       org.opencontainers.image.licenses="Apache-2.0" \
-      org.opencontainers.image.version="0.1.0-alpha.1"
+      org.opencontainers.image.version="0.1.0-alpha.2"
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
 RUN apk upgrade --no-cache
 RUN addgroup -S -g 10001 recordlane && adduser -S -D -H -u 10001 -G recordlane recordlane

@@ -60,3 +60,13 @@ images, checksums, SBOM, keyless signatures, and GitHub attestations are verifie
 as a consumer. Live-vendor compatibility also remains unverified for SAP,
 Salesforce, Dynamics, Databricks, Fabric, S3, Azure Blob, and GCS because no
 authorized vendor credentials were supplied.
+
+## Publication attempt history
+
+- `v0.1.0-alpha.1` workflow run 34459000232 completed, but AX failed before
+  checksum or signature verification because `recordlane-api-manifest.json` and
+  `recordlane-web-manifest.json` were absent from the release. The source
+  packaging step had deleted them from its shared output directory. The release
+  is retained and clearly labeled as an incomplete candidate; it is not a pass.
+- The packaging cleanup is now scoped to the source/chart artifacts it owns.
+  `0.1.0-alpha.2` is the corrected candidate target.

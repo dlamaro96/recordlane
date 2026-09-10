@@ -7,7 +7,7 @@ DEMO_COMPOSE="$ROOT_DIR/deploy/compose/compose.demo.yaml"
 PROD_COMPOSE="$ROOT_DIR/deploy/compose/compose.production.yaml"
 
 usage() {
-  printf '%s\n' "Recordlane 0.1.0-alpha.1" "Usage: ./recordlane <doctor|demo|demo-reset|up|down|status|logs|configure|migrate|validate|test|seed|backup|restore|upgrade|export|acceptance>"
+  printf '%s\n' "Recordlane 0.1.0-alpha.2" "Usage: ./recordlane <doctor|demo|demo-reset|up|down|status|logs|configure|migrate|validate|test|seed|backup|restore|upgrade|export|acceptance>"
 }
 
 case "${1:-}" in

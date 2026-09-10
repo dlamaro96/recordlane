@@ -15,6 +15,10 @@ blocked until the exact tagged candidate, packages, images, checksums,
 signatures, and attestations are published and independently read back. No
 PyPI/npm registry publication is claimed.
 
+`v0.1.0-alpha.1` is preserved as an incomplete candidate: AX found that its
+release omitted both image-manifest files. Its release page is labeled “do not
+use.” The corrected candidate is `v0.1.0-alpha.2`.
+
 ## Make the next change
 
 Run `./recordlane doctor`, `./recordlane demo`, then make one vertical change across models/service/API/UI/tests. Keep source contributions immutable, apply workspace predicates to every object query, preserve master version/provenance, and never imply downstream consistency from local success. Run `./recordlane test`, Playwright, Compose integration, Helm lint/render, and the affected recovery/security checks.
