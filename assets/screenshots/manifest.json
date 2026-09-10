@@ -1,71 +1,71 @@
 {
-  "generated_at": "2026-09-10T08:15:40.653Z",
+  "generated_at": "2026-09-10T09:25:18.325Z",
   "base_url": "http://127.0.0.1:8088",
   "tool": "Playwright 1.63.0 Chromium",
   "files": [
     {
       "file": "overview-light-1440.png",
-      "sha256": "d0e0e56298169a761a125784d39bb468265e9de387a8c394b15d7d4eb8b6b18f"
+      "sha256": "94d7aeed35f7b3b42d26420a49d814f368494a049c4879f57ae707ffee63b4bf"
     },
     {
       "file": "models-light-1440.png",
-      "sha256": "94950b9097ada734502fbc6bfb6527f7e7e620530c985e6965232d0a98084c68"
+      "sha256": "84967daa9687345937c2ed07c02f9510b7656692c360e4ee7a8a25302d6cfc4a"
     },
     {
       "file": "sources-light-1440.png",
-      "sha256": "1bc8ca52255881e8bee7384df9644e7cb53bdbaadcec6e421e98732bf0ce7b04"
+      "sha256": "0b5e38a861b84dc5778a4f2adcea479cded08ed63c9d7d0f1d309d581dc79fe7"
     },
     {
       "file": "records-light-1440.png",
-      "sha256": "c1828db0e5709e162c244b58587616ac2c57628aa25e6b1c6b5bc5ba22ae520b"
+      "sha256": "a4fb7db314f1b502d19158af0934adc9e8d4464b6d5f1ee9083a89cac356b159"
     },
     {
       "file": "entities-light-1440.png",
-      "sha256": "b1352bb882cea345b49d1518aef1f3b5719c743b03ace61322e1f62f184ebb57"
+      "sha256": "49ba5b942d0214aeb2f36fb6495948f4cc16e6eea1e60d6de0b5e22b992eda14"
     },
     {
       "file": "master-light-1440.png",
-      "sha256": "11c2ef6b7dac5e0474e9cbd9abcb11373562999cf504eb60a325873def4d0e4f"
+      "sha256": "6fb7cbb63c1274407566785c06d5fdb3bfbd97b81ba69ab61c924887b59721a1"
     },
     {
       "file": "matches-light-1440.png",
-      "sha256": "868db485e81dca8d6ba922d7ebf755f3dc07d05a2e37c1bdffd7a55bfbc2ff2b"
+      "sha256": "5d4423c119c37d8abd1f04826226f3c9326496a97ac6ba44c2d60a8b2b2d8ba5"
     },
     {
       "file": "survivorship-light-1440.png",
-      "sha256": "fabca1fb06611d1bcc7fdac8f3b579ed269b759321d25deffd9a87413e02638f"
+      "sha256": "11890677498fedca143b9be8148bc143151341b1c6ba764deda0695def966beb"
     },
     {
       "file": "inbox-light-1440.png",
-      "sha256": "1764c6484e5bd309b7ed28fc6549add935a75be75e21eb4636173a09bdc9e9c1"
+      "sha256": "7cfd8c2cef6a45fb52e678a9aee4b29e12cdce7aae62034136ca07c0580193f8"
     },
     {
       "file": "corrections-light-1440.png",
-      "sha256": "2db61551a8dd6a4cf452dba29605c68262aa1c0485bcf4feb7baa3725a1d5a00"
+      "sha256": "b421d07ea79276bf3a3305cc3c53b1f1b1d1e8dabe3e42bd768514256bb9c62e"
     },
     {
       "file": "quality-light-1440.png",
-      "sha256": "40cf0d3b12d286b7ed7aa7859bba2242b40001a850f38dcbc6aab7bdff866031"
+      "sha256": "f4c69230f4a43094ae24d23672a7263b336eb143a0ce8a22d442df50a4006cce"
     },
     {
       "file": "simulator-light-1440.png",
-      "sha256": "51196efc2863ac2ee401bbc9cd26998137cde9c28dcf45f25456c906e073baa2"
+      "sha256": "8361e606cb5e9c5003d2569a6c0239a976953fbba26c5df5f51b8ab5723fc02a"
     },
     {
       "file": "operations-light-1440.png",
-      "sha256": "49553944b6ed6376b488fcdcf617d5ceab4f1567d09552468baabcf34cf674d2"
+      "sha256": "711ab9fa7cb4cc9e39232e53efb3d29b5f0c1bd5960a1b163cc7f40f471d7aa5"
     },
     {
       "file": "relationships-light-1440.png",
-      "sha256": "7fe1c5082a1f0859375bbb5eff5bb424321a3710482a285719e759db9f00eb6f"
+      "sha256": "55b68dffcd0ab81f3bf54295d1288d117a0f0dd5318d645b5033f216b5945472"
     },
     {
       "file": "access-light-1440.png",
-      "sha256": "3d634ab1218e34ed6a91ab38d7f595190d70b4d11622fcf3db9a9512dcfb269a"
+      "sha256": "dadb44a0700afae5675d7ea0cf89276a21e83ad07e549dc213d9fb5cbb20898a"
     },
     {
       "file": "master-light-390.png",
-      "sha256": "887241f58ab2f579dcc5758854b75cfa6e5713ab8867b6cecf0f21ffe11164e0"
+      "sha256": "39396863934b21072432ac445ec5ef7e5fd6e1913c6215fbff347b1cc3c50d8a"
     }
   ]
 }

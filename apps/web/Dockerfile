@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM node:20.19.6-alpine3.22@sha256:16858294071a56ffd4cce9f17b57136cc39e41507b40e245b4f8e906f7a19463 AS build
+FROM --platform=$BUILDPLATFORM node:20.19.6-alpine3.22@sha256:16858294071a56ffd4cce9f17b57136cc39e41507b40e245b4f8e906f7a19463 AS build
 WORKDIR /src
 COPY package.json package-lock.json ./
 RUN npm ci
