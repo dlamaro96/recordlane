@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "release": "0.1.0-alpha.3",
-  "status": "alpha.3-candidate-pending-consumer-verification",
+  "status": "verified-open-alpha",
   "contracts": {"api": "v1", "domain_pack": "v1alpha1", "connector": "1.0", "events": "1.0"},
   "repositories": {
     "recordlane": "0.1.0-alpha.3",
@@ -23,6 +23,17 @@
     "recordlane-demo-api": "sha256:db33a60b056fec62b28816f820f01e5c50bcbd158150b779d24d045976948d1d",
     "recordlane-demo-web": "sha256:97da7f2918230e4ec067ba4397c10389103cbe3dc33ddd2ac45b6da1ca3d76df"
   },
-  "published_images": null,
-  "notes": ["Local image digests are native arm64 build identities, not registry URLs.", "SDKs require a platform with API v1 and must query /api/v1/capabilities.", "Alpha.1 omitted image manifests and alpha.2 crashed in QEMU; both remain failed evidence. Alpha.3 is not accepted until AX passes."]
+  "published_images": {
+    "recordlane-api": {
+      "reference": "ghcr.io/dlamaro96/recordlane-api@sha256:7735ac5ef8cd191c49189cfe4931d9879fd06dfbe201ec28e53d5fa3cf4102cb",
+      "tag": "0.1.0-alpha.3",
+      "platforms": ["linux/amd64", "linux/arm64"]
+    },
+    "recordlane-web": {
+      "reference": "ghcr.io/dlamaro96/recordlane-web@sha256:e5776e732b0d3b1c47df9d5c87f091f95130b567a51609db4e8835b1c85de0b3",
+      "tag": "0.1.0-alpha.3",
+      "platforms": ["linux/amd64", "linux/arm64"]
+    }
+  },
+  "notes": ["Local image digests are native arm64 build identities, not registry URLs.", "SDKs require a platform with API v1 and must query /api/v1/capabilities.", "Alpha.1 omitted image manifests and alpha.2 crashed in QEMU; both remain failed evidence. Alpha.3 passed independent consumer verification."]
 }

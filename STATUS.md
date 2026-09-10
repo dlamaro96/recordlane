@@ -1,6 +1,6 @@
 # Execution status
 
-Updated: 2026-09-10T14:00:00+04:00
+Updated: 2026-09-10T14:20:00+04:00
 
 ## Environment
 
@@ -20,12 +20,12 @@ Updated: 2026-09-10T14:00:00+04:00
 ## Current state
 
 - Contract read completely and persisted: COMPLETE.
-- Requirement/evidence matrix: UPDATED. Acceptance A–W now have executable passing evidence; X remains blocked until the controlled candidate release is published and verified as a consumer.
+- Requirement/evidence matrix: COMPLETE for the specified acceptance scenarios. A–W passed in the consolidated run and postpublication AX passed against the downloaded alpha.3 candidate.
 - Product implementation: WORKING OPEN ALPHA. Stable source identities and immutable observations, configuration-driven deterministic and Fellegi–Sunter matching, impact simulation, field/action/workspace authorization, OIDC/SCIM/service identities, encrypted/Vault secret references, fenced jobs, transactional publication/reconciliation, observability, recovery, and a redesigned light-first UI operate against persisted backend state.
 - Verification: the final consolidated A–W acceptance invocation passes 23/23 scenarios in 239.46 seconds. Separately, 72 non-acceptance backend tests pass with two environment-specific PostgreSQL skips; the PostgreSQL/RLS paths run in the acceptance and CI PostgreSQL suites. Frontend unit/build and nine Playwright scenarios pass, including real Keycloak login, persisted UI actions, offline mastering/publication, mobile layout, and automated WCAG A/AA checks. Sixteen clean seeded light-mode screenshots were recaptured and inspected. The 100,000-record synthetic matching exercise processed 59,135 source records/s with 1.0 pairwise accuracy in 1.691 seconds and 132,415,488-byte peak RSS; its in-memory synthetic limits are explicit.
 - Deployment/recovery: hardened production Compose and a disposable kind/Helm installation pass; the disconnected internal-network profile completes real login through local Keycloak, ingestion, matching, approval, and local publication; isolated restore preserves semantic counts and puts uncertain deliveries into reconciliation.
-- Release readiness: PREPUBLICATION GATES PASS; FINAL GATE BLOCKED on AX. Alpha.1 failed consumer verification because its release omitted both image-manifest files. Alpha.2 fixed that defect, but its QEMU arm64 web build crashed with an illegal instruction and the hung run was cancelled without a GitHub Release. Alpha.3 carries the validated native web-build correction. Live-vendor compatibility remains unverified where credentials were unavailable; DNS connection pinning, privileged-DB tamper resistance, broader cluster/performance workloads, and HA failover remain documented limitations.
-- External publication: the five public source repositories and GitHub Pages documentation are live. Alpha.1 is explicitly incomplete and not accepted; alpha.2 has only a partial API image and no GitHub Release. Alpha.3 is not claimed until its candidate workflow succeeds and is read back.
+- Release readiness: ACCEPTED OPEN ALPHA. Alpha.1 failed because its release omitted both image-manifest files. Alpha.2 fixed that defect, but its QEMU arm64 web build crashed and the hung run was cancelled. Alpha.3 completed the release workflow and the independent AX consumer verifier. Live-vendor compatibility remains unverified where credentials were unavailable; DNS connection pinning, privileged-DB tamper resistance, broader cluster/performance workloads, and HA failover remain documented limitations rather than production-certification claims.
+- External publication: the five public source repositories, GitHub Pages documentation, 14-asset alpha.3 prerelease, and anonymously pullable signed amd64/arm64 API and web images are live and were read back. Release: https://github.com/dlamaro96/recordlane/releases/tag/v0.1.0-alpha.3
 
 ## Evidence convention
 

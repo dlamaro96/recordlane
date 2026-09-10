@@ -1,19 +1,31 @@
-Command: ./recordlane acceptance -q
+Recordlane acceptance evidence
+==============================
+
 Working directory: /Users/daniamaro96/Documents/ChatGPT/MDM
-Tested commit: eec8e49eca57d50afba21ab37d8eee6821ab2eba
-Executed: 2026-09-09T18:27:00+04:00
-Exit status: 0
-Environment: Darwin arm64; Python 3.14.5; pytest 9.0.3; synthetic SQLite fixture
+Platform release commit: 64246675a53aec6ad6799955be002f2104feddad
+Release tag: v0.1.0-alpha.3
+Environment: Darwin arm64; Python 3.14.5; pytest 9.0.3; Docker 29.5.2
 
-============================= test session starts ==============================
-collected 24 items
+A-W consolidated execution
+----------------------------
+Command: backend/.venv/bin/pytest -q tests/acceptance/test_contract_scenarios.py -k 'not test_ax_published_artifacts_and_attestations'
+Result: 23 passed, 1 deselected in 239.46 seconds
 
-tests/acceptance/test_contract_scenarios.py ss...sss..ss.sss.s....ss     [100%]
+AX publication execution
+------------------------
+Release workflow: https://github.com/dlamaro96/recordlane/actions/runs/34464594592
+Workflow result: success in 6m09s
+Release: https://github.com/dlamaro96/recordlane/releases/tag/v0.1.0-alpha.3
+Published assets: 14
+API image: sha256:7735ac5ef8cd191c49189cfe4931d9879fd06dfbe201ec28e53d5fa3cf4102cb (linux/amd64, linux/arm64)
+Web image: sha256:e5776e732b0d3b1c47df9d5c87f091f95130b567a51609db4e8835b1c85de0b3 (linux/amd64, linux/arm64)
 
-================== 11 passed, 13 skipped, 2 warnings in 7.81s ==================
+First command result: 1 failed in 27.89 seconds. All checksum, provenance,
+signature, manifest, and Helm checks passed; the verifier then installed SDK
+wheels with --no-deps and could not import the declared httpx dependency.
 
-None of the thirteen skips is counted as a pass. Two have narrower
-INTEGRATION_TESTED evidence and the other eleven remain BLOCKED, as recorded in
-REQUIREMENTS.yaml. PostgreSQL 17 evidence for stable-source lifecycle,
-executable policy, remastering, worker recovery, and alpha migration is
-recorded in the current validation run and STATUS.md.
+Corrected command: RECORDLANE_RELEASE_TAG=v0.1.0-alpha.3 backend/.venv/bin/pytest -q tests/acceptance/test_contract_scenarios.py::test_ax_published_artifacts_and_attestations
+Corrected result: 1 passed in 26.80 seconds
+
+The corrected verifier performed a normal dependency-resolving wheel install.
+No released artifact was changed between the failed and passing invocations.

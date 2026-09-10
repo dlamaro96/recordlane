@@ -32,9 +32,9 @@ requirements:
   - {id: R24, title: original brand real screenshots and editable diagrams, implementation: "assets; Playwright; DOT", validation: "capture and render", evidence: assets/screenshots/manifest.json, status: PASSED, blocker: null}
   - {id: R25, title: versioned offline-capable documentation website, implementation: ../recordlane-docs, validation: "clean-copy offline docs/link build and contributor rehearsal", evidence: validation.json, status: PASSED, blocker: null}
   - {id: R26, title: open-source contributor readiness and governance, implementation: "community files; forms; workflows", validation: "docs check; GitHub API readback", evidence: "validation.json; HANDOVER.md", status: PASSED, blocker: null}
-  - {id: R27, title: secure CI packaging SBOM provenance and release gates, implementation: "workflows; release scripts", validation: "local build and gate", evidence: null, status: INTEGRATION_TESTED, blocker: "amd64, registry publication, provenance and signatures unavailable"}
-  - {id: R28, title: acceptance scenarios A through X, implementation: tests/acceptance/test_contract_scenarios.py, validation: ./recordlane acceptance, evidence: acceptance.txt, status: BLOCKED, blocker: "A through W have executable tests; X requires candidate publication and consumer verification"}
-  - {id: R29, title: verified publication and maintainer handover, implementation: HANDOVER.md, validation: remote readback, evidence: HANDOVER.md, status: BLOCKED, blocker: "Source repositories/docs verified; packages, images, chart, signatures and GitHub Release withheld by release gate"}
+  - {id: R27, title: secure CI packaging SBOM provenance and release gates, implementation: "workflows; release scripts", validation: "alpha.3 release workflow and consumer readback", evidence: "acceptance.txt; release run 34464594592", status: PASSED, blocker: null}
+  - {id: R28, title: acceptance scenarios A through X, implementation: tests/acceptance/test_contract_scenarios.py, validation: "consolidated A-W plus postpublication AX", evidence: acceptance.txt, status: PASSED, blocker: null}
+  - {id: R29, title: verified publication and maintainer handover, implementation: HANDOVER.md, validation: "remote repository, docs, release, registry, signature and attestation readback", evidence: "acceptance.txt; HANDOVER.md", status: PASSED, blocker: null}
   - {id: R30, title: current primary references and pinned versions, implementation: docs/architecture/dependencies.md, validation: "manifest and image inspection", evidence: validation.json, status: PASSED, blocker: null}
 
 subrequirements:
@@ -71,4 +71,4 @@ acceptance:
   - {id: AU, title: real UI and reproducible assets, test: test_au_real_ui_and_reproducible_assets, evidence: "acceptance.txt; screenshot manifest", status: PASSED, blocker: null}
   - {id: AV, title: security license and secret gates, test: test_av_security_and_secret_gates_are_explicit, evidence: "acceptance.txt; security", status: PASSED, blocker: null}
   - {id: AW, title: offline docs and contributor setup, test: test_aw_offline_docs_quickstart_examples_and_contributor_setup, evidence: acceptance.txt, status: PASSED, blocker: null}
-  - {id: AX, title: published artifacts and attestations, test: test_ax_published_artifacts_and_attestations, evidence: "acceptance.txt; HANDOVER.md", status: BLOCKED, blocker: "alpha.1 omitted image manifests; alpha.2 arm64 web build crashed under QEMU; corrected alpha.3 publication pending"}
+  - {id: AX, title: published artifacts and attestations, test: test_ax_published_artifacts_and_attestations, evidence: "acceptance.txt; HANDOVER.md", status: PASSED, blocker: null}

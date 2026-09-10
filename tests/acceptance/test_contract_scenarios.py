@@ -955,7 +955,6 @@ def test_ax_published_artifacts_and_attestations():
                 "-m",
                 "pip",
                 "install",
-                "--no-deps",
                 download / f"recordlane_client-{python_version}-py3-none-any.whl",
                 download / f"recordlane_connector_kit-{python_version}-py3-none-any.whl",
             ],

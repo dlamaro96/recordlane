@@ -52,14 +52,24 @@ commit; `SOURCE_COMMIT` in the release identifies that exact tagged commit.
   the manifest contains their SHA-256 digests. Thirteen editable DOT diagrams
   were regenerated to SVG and PNG in a light, readable rendering and inspected.
 
-## External blockers preserved
+## Postpublication acceptance
 
-Acceptance X remains blocked until the exact tagged candidate is published and
-the release archives, SDK/ecosystem packages, Helm chart, multi-architecture
-images, checksums, SBOM, keyless signatures, and GitHub attestations are verified
-as a consumer. Live-vendor compatibility also remains unverified for SAP,
-Salesforce, Dynamics, Databricks, Fabric, S3, Azure Blob, and GCS because no
-authorized vendor credentials were supplied.
+`v0.1.0-alpha.3` release workflow 34464594592 completed in 6m09s and published
+14 assets. AX then downloaded every asset, validated its checksum, verified the
+signed checksum bundle and GitHub provenance, verified both signed public
+multi-architecture images, linted the Helm archive, installed both Python
+wheels with their declared dependencies, and inspected the TypeScript and docs
+archives. The corrected AX run passed in 26.80 seconds.
+
+The first postpublication AX invocation intentionally remains part of the audit
+history: it failed after all cryptographic/image checks because the verifier
+installed the Python wheels with `--no-deps` and then imported their declared
+`httpx` dependency. The verifier was repaired to perform a normal consumer
+install; released artifacts were not changed.
+
+Live-vendor compatibility remains unverified for SAP, Salesforce, Dynamics,
+Databricks, Fabric, S3, Azure Blob, and GCS because no authorized vendor
+credentials were supplied.
 
 ## Publication attempt history
 
@@ -74,4 +84,5 @@ authorized vendor credentials were supplied.
   stopped producing output. It published only a partial API image and did not
   create a GitHub Release; it is not a pass.
 - `0.1.0-alpha.3` uses a native build stage for the architecture-independent
-  web bundle and is the corrected candidate target.
+  web bundle. The workflow and independent AX verifier passed; release:
+  https://github.com/dlamaro96/recordlane/releases/tag/v0.1.0-alpha.3

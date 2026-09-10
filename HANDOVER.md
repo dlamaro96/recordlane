@@ -9,17 +9,25 @@
 - Documentation: https://github.com/dlamaro96/recordlane-docs — `/Users/daniamaro96/Documents/ChatGPT/recordlane-docs`
 - Live static docs: https://dlamaro96.github.io/recordlane-docs/
 
-These repositories contain the complete prepublication open-alpha candidate.
-The final consolidated A–W acceptance run passed 23/23 scenarios; AX remains
-blocked until the exact tagged candidate, packages, images, checksums,
-signatures, and attestations are published and independently read back. No
-PyPI/npm registry publication is claimed.
+These repositories contain the complete verified open-alpha source. The final
+consolidated A–W acceptance run passed 23/23 scenarios, and postpublication AX
+passed against `v0.1.0-alpha.3` after downloading and checking all 14 release
+assets, installing both Python wheels, inspecting the TypeScript/docs archives,
+linting the packaged chart, and verifying checksums, keyless signatures,
+multi-architecture manifests, and GitHub provenance. No PyPI/npm registry
+publication is claimed; the installable SDK distributions are GitHub Release
+assets.
 
 `v0.1.0-alpha.1` is preserved as an incomplete candidate: AX found that its
 release omitted both image-manifest files. Its release page is labeled “do not
 use.” The alpha.2 run was cancelled after QEMU crashed during its arm64 web
 build and stopped producing output; no alpha.2 GitHub Release was created. The
 native web-build correction is carried by `v0.1.0-alpha.3`.
+
+- Verified release: https://github.com/dlamaro96/recordlane/releases/tag/v0.1.0-alpha.3
+- Release workflow: https://github.com/dlamaro96/recordlane/actions/runs/34464594592
+- API image: `ghcr.io/dlamaro96/recordlane-api@sha256:7735ac5ef8cd191c49189cfe4931d9879fd06dfbe201ec28e53d5fa3cf4102cb`
+- Web image: `ghcr.io/dlamaro96/recordlane-web@sha256:e5776e732b0d3b1c47df9d5c87f091f95130b567a51609db4e8835b1c85de0b3`
 
 ## Make the next change
 

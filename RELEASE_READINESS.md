@@ -2,16 +2,17 @@
 
 Target: 0.1.0-alpha.3
 
-Recordlane is a working open alpha. Acceptance A–W have executable passing
-evidence. Acceptance X remains blocked until the controlled prerelease candidate
-is published and verified by digest, signature, attestation, and consumer install.
-A skipped or blocked check is never counted as a pass.
+Recordlane is a working, verified open alpha. Acceptance A–X have executable
+passing evidence. The controlled alpha.3 prerelease was independently read back
+and verified by digest, signature, attestation, package install, archive content,
+and Helm lint. A skipped or blocked check is never counted as a pass.
 
 The preserved alpha.1 candidate failed AX because the release omitted its two
 image-manifest files. Alpha.2 fixed that packaging defect, but its QEMU arm64
 web build crashed with an illegal instruction and left the workflow hung; the
 run was cancelled without publishing a release. Alpha.3 builds the portable
-web bundle natively and must complete the entire verifier before promotion.
+web bundle natively. Its release workflow and independent AX consumer verifier
+both completed successfully.
 
 ## Mandatory gates
 
@@ -23,14 +24,20 @@ web bundle natively and must complete the entire verifier before promotion.
 - [x] Backup/isolated restore, reconciliation, and prior-schema upgrade rehearsal
 - [x] Security, licensing, secret, accessibility, and dependency gates
 - [x] Real light-mode screenshots, editable diagrams, docs build, and link checks
-- [ ] Published release/package/image/chart verification
+- [x] Published release/package/image/chart verification
 
-## Current blocking set
+## Postpublication result
 
-- Publish and verify the exact tagged multi-architecture candidate images,
-  source archive, Helm chart, SDK/ecosystem packages, offline docs archive,
-  checksums, SBOM, signatures, and GitHub attestations.
-- Promote final evidence only after those postpublication checks pass.
+- Release: `v0.1.0-alpha.3`, 14 assets, published 2026-09-10.
+- Workflow: https://github.com/dlamaro96/recordlane/actions/runs/34464594592
+- Consumer verification: AX passed after downloading every asset, checking all
+  hashes, verifying the checksum bundle and both image signatures, verifying
+  GitHub provenance, linting the packaged chart, installing both Python wheels,
+  and inspecting the TypeScript and offline-doc archives.
+- Public multi-architecture images: API digest
+  `sha256:7735ac5ef8cd191c49189cfe4931d9879fd06dfbe201ec28e53d5fa3cf4102cb`;
+  web digest
+  `sha256:e5776e732b0d3b1c47df9d5c87f091f95130b567a51609db4e8835b1c85de0b3`.
 
 Native-arm64 API and web images, the repository tree, and npm dependencies have
 no detected high or critical finding in the current scans. The remaining risks
